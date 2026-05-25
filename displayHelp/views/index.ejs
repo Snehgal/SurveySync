@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help | SurveySync</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 100px;
+            flex: 1;
+        }
+        h1 {
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        header {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+        .lab-link {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+        .lab {
+            margin-bottom: 16px;
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid rgb(160, 151, 136);
+            border-radius: 20px;
+            background-color: #007bffc6;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 2px 2px 8px rgba(126, 124, 120, 0.664);
+            transition: background-color 0.2s, box-shadow 0.1s; /* Combined transitions */
+
+        }
+        .lab:hover {
+            border: 1px solid rgb(160, 151, 136);
+            border-radius: 20px;
+            background-color: #f7a009;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            /* box-shadow: inset 0px 0px 35px -15px rgba(0, 0, 0, 0.664); */
+            box-shadow: rgba(17, 17, 26, 0.1) 0px 4px 16px 0px inset, rgba(17, 17, 26, 0.05) 0px 8px 32px 0px;
+        }
+        .lab h2 {
+            margin: 0;
+            color: rgb(252, 254, 254);
+            font-size: 20px;
+            font-weight: 200;
+        }
+        .expand-icon {
+            font-size: 30px;
+            color: #f5f6f6;
+            text-decoration: none; /* Ensure no underline */
+        }
+        footer {
+            font-size: 14px;
+            color: white;
+            background-color: #007BFF;
+            padding: 10px;
+            border-top: 1px solid #0056b3;
+            text-align: center;
+            width: 100%;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>Ongoing Labs</header>
+        <% labs.forEach(lab => { %>
+            <a class="lab-link" href="/lab/<%= lab.labID %>/map">
+                <div class="lab">
+                    <h2>&emsp;&emsp;<%= lab.labNumber %>&emsp;&emsp; </h2>
+                    <span class="expand-icon">&#x27A4;</span> <!-- Right arrow icon -->
+                </div>
+            </a>
+        <% }); %>
+    </div>
+    <footer>
+        Made by Chirag Sehgal
+    </footer>
+    <script>
+        // Refresh the page every 15 seconds
+        setTimeout(function() {
+            location.reload();
+        }, 5000); // 15000 milliseconds = 15 seconds
+    </script>
+</body>
+</html>

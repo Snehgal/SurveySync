@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | SurveySync</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+    <header>Admin: Feedback Collection</header>
+    <nav>
+        <button onclick="scrollToSection('containerS')" id="schedule-section-btn">Schedule</button>
+        <button onclick="scrollToSection('layout-section')" id="layout-btn">Seat Layout</button>
+        <button onclick="scrollToSection('activity-section')" id="activity-btn">Activity</button>
+        <button id="help-btn">Help-Tracking</button>
+        <button id="dshbrd">Data Visualisation</button>
+    </nav>
+    
+    <div id="containerS" class="section">
+        <!-- Schedule Form -->
+        <h2>Schedule</h2>
+        <form id="scheduleForm">
+            <div class="form-row">
+                <div>
+                    <label for="courseCode">Course Code:</label>
+                    <input type="text" id="courseCode" name="courseCode" maxlength="6" required>
+                </div>
+                <div>
+                    <label for="batch">Batch:</label>
+                    <input type="number" id="batch" name="batch" min="1000" max="9999" required>
+                </div>
+                <div>
+                    <label for="labNumber">Lab Number:</label>
+                    <input type="number" id="labNumber" name="labNumber" min="0" max="99" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label for="roomNumber">Room Number:</label>
+                    <select id="roomNumber" name="roomNumber" required>
+                        <!-- Options will be added here dynamically -->
+                    </select>
+                </div>
+                <div>
+                    <label for="startTime">Start Time:</label>
+                    <input type="datetime-local" id="startTime" name="startTime" required>
+                </div>
+                <div>
+                    <label for="endTime">End Time:</label>
+                    <input type="datetime-local" id="endTime" name="endTime" required>
+                </div>
+            </div>
+            <div class="form-row repeat-row">
+                <div class="repeat-toggle">
+                    <label for="repeatWeekly">
+                        <input type="checkbox" id="repeatWeekly" name="repeatWeekly">
+                        Repeat Weekly
+                    </label>
+                </div>
+                <div id="repeatUntilWrapper" style="display: none;">
+                    <label for="repeatUntil">Repeat Until:</label>
+                    <input type="date" id="repeatUntil" name="repeatUntil">
+                </div>
+            </div>
+            <button type="submit">Add Record</button>
+        </form>
+        <!-- Modal -->
+        <div id="myModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <p id="modalMessage"></p>
+            </div>
+        </div>
+
+         <!-- Data Display Section -->
+         <div id="data-containerS-wrapper">
+            <h2 id="data-heading" style="font-weight: bold; cursor: pointer;">
+                <span id="toggle-indicator" style="font-size: 18px; margin-left: 10px;">▼</span>
+                Schedule Records
+            </h2>
+            <div class="schedule-tabs">
+                <button class="tab-btn active" data-tab="ongoing">Ongoing</button>
+                <button class="tab-btn" data-tab="past">Past (7 days)</button>
+                <button class="tab-btn" data-tab="upcoming">Upcoming (7 days)</button>
+                <button class="tab-btn" data-tab="all">All</button>
+            </div>
+            <div id="data-containerS">
+                <!-- Records will be appended here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Seat Layout Section ── -->
+    <div id="layout-section" class="section">
+        <div id="layout-container">
+            <h2>Seat Layout Manager</h2>
+
+            <div class="layout-form">
+                <div class="form-row">
+                    <div>
+                        <label for="layoutRoom">Lab (Room):</label>
+                        <select id="layoutRoom">
+                            <option value="">— Select Room —</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Current layout status -->
+                <div id="layoutStatus" class="layout-status"></div>
+
+                <!-- Existing layout preview -->
+                <div id="existingLayoutPreview" style="display:none;"></div>
+
+                <hr style="margin: 20px 0; border-color: #eee;">
+
+                <h3 style="color: #007BFF; margin-bottom: 14px;">Configure Layout</h3>
+                <div class="form-row">
+                    <div>
+                        <label for="layoutRows">Total Rows:</label>
+                        <input type="number" id="layoutRows" min="1" max="20" placeholder="e.g. 5">
+                    </div>
+                    <div>
+                        <label for="layoutSeatsPerRow">Seats Per Row:</label>
+                        <input type="number" id="layoutSeatsPerRow" min="1" max="30" placeholder="e.g. 8">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label for="layoutOddRow">Odd Row Position:</label>
+                        <select id="layoutOddRow">
+                            <option value="right">Right wall</option>
+                            <option value="left">Left wall</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="layoutStartID">Start Table ID:</label>
+                        <input type="number" id="layoutStartID" min="1" placeholder="e.g. 1001">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
+                    <button type="button" id="previewLayoutBtn">Preview Layout</button>
+                    <button type="button" id="saveLayoutBtn" style="display:none;">Confirm &amp; Save</button>
+                </div>
+            </div>
+
+            <!-- Preview area -->
+            <div id="layoutPreviewArea" style="display:none;"></div>
+        </div>
+    </div>
+
+        <div id="activity-section" class="section">
+            <div id="container">
+                <div id="data-container-wrapper">
+                    <h2>Activity</h2>
+                    <div id="data-container"></div>
+                </div>
+                <div id="controls">
+                    <div id="status"></div>
+                    <div id="button-container">
+                        <button id="connect-btn">Connect</button>
+                        <button id="disconnect-btn" disabled>Disconnect</button>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+        <footer>
+            Made by Chirag Sehgal
+        </footer>
+        <script>
+            let ws;
+            const dataContainer = document.getElementById('data-container');
+            const connectBtn = document.getElementById('connect-btn');
+            const disconnectBtn = document.getElementById('disconnect-btn');
+            const status = document.getElementById('status');
+
+            function getActivityClass(message) {
+                const normalized = String(message || '').toLowerCase();
+
+                if (normalized.includes('help')) {
+                    return 'activity-help';
+                }
+
+                if (normalized.includes('logged "yes"')) {
+                    return 'activity-yes';
+                }
+
+                if (normalized.includes('logged "no"')) {
+                    return 'activity-no';
+                }
+
+                return 'activity-neutral';
+            }
+
+            connectBtn.onclick = function () {
+                if (!ws || ws.readyState === WebSocket.CLOSED) {
+                    status.textContent = 'Connecting...';
+                    connectBtn.disabled = true;
+                    disconnectBtn.disabled = true;
+
+                    // ws = new WebSocket('ws://localhost:8080');
+                    ws = new WebSocket('wss://esp8266-control.onrender.com');
+
+                    ws.onopen = function () {
+                        status.textContent = 'Connected';
+                        connectBtn.disabled = true;
+                        disconnectBtn.disabled = false;
+                    };
+
+                    ws.onmessage = function (event) {
+                        const message = event.data;
+                        const dataEntry = document.createElement('div');
+                        dataEntry.className = 'data-entry activity-entry ' + getActivityClass(message);
+                        dataEntry.textContent = message;
+                        dataContainer.appendChild(dataEntry);
+                    };
+
+                    ws.onclose = function () {
+                        status.textContent = 'Disconnected';
+                        connectBtn.disabled = false;
+                        disconnectBtn.disabled = true;
+                    };
+
+                    ws.onerror = function (error) {
+                        status.textContent = 'Error';
+                        console.error('WebSocket error:', error);
+                    };
+                } else {
+                    status.textContent = 'WebSocket is already connected';
+                }
+            };
+
+            disconnectBtn.onclick = function () {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    status.textContent = 'Disconnecting...';
+                    connectBtn.disabled = true;
+                    disconnectBtn.disabled = true;
+
+                    ws.close();
+                } else {
+                    status.textContent = 'WebSocket is not connected';
+                }
+            };
+
+            // Scroll to section function
+            function scrollToSection(sectionId) {
+                const section = document.getElementById(sectionId);
+                section.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            // Intersection Observer to highlight the current section button
+            const sections = document.querySelectorAll('.section');
+            const options = {
+                root: null,
+                threshold: 0.5
+            };
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    const id = entry.target.getAttribute('id');
+                    const navButton = document.querySelector(`button[onclick="scrollToSection('${id}')"]`);
+                    if (entry.isIntersecting) {
+                        navButton.classList.add('active');
+                    } else {
+                        navButton.classList.remove('active');
+                    }
+                });
+            }, options);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        </script>
+        <script src="./script.js"></script>
+</body>
+
+</html>

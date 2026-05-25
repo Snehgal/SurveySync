@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= labNumber %> - Help Calls | SurveySync
+    </title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> -->
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            background-color: #f4f4f4;
+            /* Light background color for contrast */
+        }
+
+        header {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .back-link {
+            font-size: 24px;
+            color: white;
+            text-decoration: none;
+            position: absolute;
+            align-items: center;
+            align-content: center;
+            top: 10px;
+            left: 10px;
+        }
+
+        .back-link:hover {
+            color: #f78409;
+            outline-color: #000000;
+            filter: drop-shadow(1px 1px 8px black);
+        }
+
+        .view-toggle {
+            font-size: 13px;
+            color: white;
+            text-decoration: none;
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            padding: 5px 14px;
+            border-radius: 20px;
+            transition: background 0.2s;
+        }
+
+        .view-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .container {
+            margin-top: 60px;
+            /* Space for fixed header */
+            max-width: 800px;
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .scrollable-container {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            padding: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .chip {
+            font-family: 'Montserrat', sans-serif;
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 20px;
+            background-color: #f7a009d1;
+            /* Vibrant yellow */
+            color: #000000;
+            font-size: 16px;
+            margin: 5px;
+            border: 1px solid #b87c03;
+            /* Slightly darker yellow */
+            box-shadow: 2px 2px 4px rgba(25, 24, 24, 0.882);
+            cursor: pointer;
+            position: relative;
+            /* For positioning the tooltip */
+        }
+
+        .chip:hover {
+            background-color: #f75409d1;
+            /* Change color to blue */
+            color: white;
+        }
+
+        .chip::after {
+            content: attr(data-tooltip);
+            /* Content of the tooltip */
+            position: absolute;
+            bottom: 80%;
+            /* Position below the chip */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #00000073;
+            /* Dark background for the tooltip */
+            color: rgb(255, 255, 255);
+            padding: 5px 10px;
+            /* Smaller padding for a smaller box */
+            border-radius: 12px;
+            /* More rounded edges */
+            white-space: nowrap;
+            /* Prevents text from wrapping */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 1000;
+            backdrop-filter: blur(40px);
+            /* Blur effect */
+            font-size: 14px;
+            /* Smaller font size */
+        }
+
+        .chip:hover::after {
+            opacity: 0.8;
+            visibility: visible;
+        }
+
+        .unresolved-chip {
+            background-color: #ff4d4d;
+            /* Red color for unresolved helps */
+            color: white;
+            cursor: default;
+        }
+
+        .total-records {
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 16px;
+            text-align: left;
+            width: 100%;
+        }
+
+        /* Dropdown styles */
+        .dropdown {
+            display: none;
+            position: absolute;
+            background-color: #007bff42;
+            color: #000000;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            width: 200px;
+            backdrop-filter: blur(10px);
+            /* Apply blur effect */
+        }
+
+        .dropdown.active {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            background-color: #007bff42;
+            backdrop-filter: blur(10px);
+            /* Apply blur effect */
+            color: #000000;
+        }
+
+        footer {
+            font-size: 14px;
+            color: white;
+            background-color: #007BFF;
+            padding: 10px;
+            border-top: 1px solid #0056b3;
+            text-align: center;
+            width: 100%;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+        }
+
+        .notification {
+            display:block;
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #d4edda;
+            /* Pastel green background */
+            color: #155724;
+            /* Dark green text */
+            padding: 15px;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: auto;
+            max-width: 90%;
+            text-align: center;
+            z-index: 1000;
+            display: none;
+            /* Hidden by default */
+        }
+
+        .notification.error {
+            background-color: #f8d7da;
+            /* Pastel red background for errors */
+            color: #721c24;
+            /* Dark red text */
+            border-color: #f5c6cb;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <a class="back-link" href="/">&#x21a9;</a>
+        Help Calls for <%= labNumber %>
+        <a class="view-toggle" href="/lab/<%= labID %>/map">Map View</a>
+    </header>
+    <div id="notification" class="notification hidden"></div>
+    <div class="container">
+        <div class="scrollable-container">
+            <div class="total-records">Active Helps: <%= helps.length %>
+            </div>
+            <% helps.forEach(help=> { %>
+                <div class="chip" data-tooltip="Click to log an issue"
+                    onclick="toggleDropdown(event, '<%= help.tableID %>')">
+                    Table <strong>
+                        <%= help.tableID %>
+                    </strong> | <%= help.helpStarted.toLocaleTimeString() %>
+                        <div class="dropdown" id="dropdown-<%= help.tableID %>">
+                            <div class="dropdown-item"
+                                onclick="logIssue('<%= help.tableID %>', 'Faulty Trainer Kit', '<%= help.helpStarted %>')">
+                                Faulty Trainer Kit</div>
+                            <div class="dropdown-item"
+                                onclick="logIssue('<%= help.tableID %>', 'Faulty Equipment', '<%= help.helpStarted %>')">
+                                Faulty Equipment</div>
+                            <div class="dropdown-item"
+                                onclick="logIssue('<%= help.tableID %>', 'Wrong Instructions', '<%= help.helpStarted %>')">
+                                Wrong Instructions</div>
+                            <div class="dropdown-item"
+                                onclick="logIssue('<%= help.tableID %>', 'Wifi Connectivity', '<%= help.helpStarted %>')">
+                                Wifi Connectivity</div>
+                            <div class="dropdown-item"
+                                onclick="logIssue('<%= help.tableID %>', 'Others/Indeterminate', '<%= help.helpStarted%>')">
+                                Others/Indeterminate</div>
+                        </div>
+                </div>
+                <% }) %>
+        </div>
+        <div class="scrollable-container">
+            <div class="total-records">Unresolved Helps: <%= UnresolvedHelps.length %>
+            </div>
+            <% UnresolvedHelps.forEach(UnresolvedHelp=> { %>
+                <span class="chip unresolved-chip" data-tooltip="Under Inspection">
+                    Table <strong>
+                        <%= UnresolvedHelp.tableID %>
+                    </strong> | <%= UnresolvedHelp.issue %>
+                </span>
+                <% }); %>
+        </div>
+    </div>
+    <footer>
+        Made by Chirag Sehgal
+    </footer>
+    <script>
+        // Refresh the page every 10 seconds
+        setTimeout(function () {
+            location.reload();
+        }, 5000); // 10000 milliseconds = 10 seconds
+    </script>
+    <script>
+
+        function toggleDropdown(event, tableID) {
+            event.stopPropagation(); // Prevent click event from propagating to document
+            const dropdown = document.getElementById('dropdown-' + tableID);
+            // Close any other open dropdowns
+            document.querySelectorAll('.dropdown').forEach(d => {
+                if (d !== dropdown) {
+                    d.classList.remove('active');
+                }
+            });
+            // Toggle the clicked dropdown
+            dropdown.classList.toggle('active');
+        }
+
+        function logIssue(tableID, issue, time) {
+            console.log("Received to log unresolved: ",tableID,issue,time);
+            fetch('/log-issue', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ tableID, issue, time })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // showNotification('Issue logged successfully');
+                        location.reload();
+                    } else {
+                        alert('Failed to log issue');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error logging issue:', error);
+                    alert('Error logging issue');
+                });
+        }
+
+
+
+
+        // Close dropdown if clicked outside
+        document.addEventListener('click', function (event) {
+            const dropdowns = document.querySelectorAll('.dropdown');
+            dropdowns.forEach(dropdown => {
+                if (!dropdown.contains(event.target)) {
+                    dropdown.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,101 @@
+body {
+    font-family: 'Montserrat', sans-serif;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    box-sizing: border-box;
+    background-color: #f4f4f4; /* Light background color for contrast */
+}
+header {
+    width: 100%;
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+.back-link {
+    font-size: 24px;
+    color: white;
+    text-decoration: none;
+    position: absolute;
+    align-items: center;
+    align-content: center;
+    top: 10px;
+    left: 10px;
+}
+.back-link:hover {
+    color: #f78409;
+    outline-color: #000000;
+    filter: drop-shadow(1px 1px 8px black);
+}
+.container {
+    margin-top: 60px; /* Space for fixed header */
+    max-width: 800px;
+    width: 100%;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.scrollable-container {
+    max-height: 500px; /* Adjust as needed */
+    overflow-y: auto;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background-color: #fff;
+    padding: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    margin-bottom: 20px;
+}
+.chip {
+    font-family: 'Montserrat', sans-serif;
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 20px;
+    background-color: #f7a009d1; /* Vibrant yellow */
+    color: #000000;
+    font-size: 16px;
+    margin: 5px;
+    border: 1px solid #b87c03; /* Slightly darker yellow */
+    box-shadow: 2px 2px 4px rgba(25, 24, 24, 0.882);
+}
+.chip:hover {
+    background-color: #f75409d1; /* Change color to blue */
+    color: white;
+}
+.unresolved-chip {
+    background-color: #ff4d4d; /* Red color for unresolved helps */
+    color: white;
+}
+.total-records {
+    font-weight: 600;
+    margin-bottom: 10px;
+    font-size: 16px;
+    text-align: left;
+    width: 100%;
+}
+footer {
+    font-size: 14px;
+    color: white;
+    background-color: #007BFF;
+    padding: 10px;
+    border-top: 1px solid #0056b3;
+    text-align: center;
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+}

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | SurveySync </title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <header>
+        Data Visualization Dashboard
+    </header>
+
+    <main>
+        <section class="filters">
+            <select id="room">
+                <option value="">Room Number</option>
+                <% rooms.forEach(room => { %>
+                    <option value="<%= room %>"><%= room %></option>
+                <% }) %>
+            </select>
+            <select id="course">
+                <option value="">Course Code</option>
+                <% courses.forEach(course => { %>
+                    <option value="<%= course.split('-')[0] %>"><%= course.split('-')[0] %></option>
+                <% }) %>
+            </select>
+            <select id="batch">
+                <option value="">Batch</option>
+                <% batches.forEach(batch => { %>
+                    <option value="<%= batch %>"><%= batch %></option>
+                <% }) %>
+            </select>
+            <select id="lab">
+                <option value="">Lab Number</option>
+                <% labs.forEach(lab => { %>
+                    <option value="<%= lab %>"><%= lab %></option>
+                <% }) %>
+            </select>
+            <section class="chart-toggle">
+                <label for="chartType"></label>
+                <select id="chartType">
+                    <option value="bar">Chart</option>
+                    <option value="bar">Bar</option>
+                    <option value="pie">Pie</option>
+                    <option value="doughnut">Doughnut</option>
+                </select>
+            </section>
+            <button id="downloadBtn">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 5v14m0 0-5-5m5 5 5-5M5 19h14"></path>
+                </svg>
+            </button>
+            
+        </section>
+
+        <section class="chart">
+            <canvas id="chartCanvas"></canvas>
+        </section>
+
+        <div class="loading">Loading...</div>
+    </main>
+
+    <footer>
+        Made by Chirag Sehgal
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+
+    <script src="/scripts.js"></script>
+</body>
+</html>

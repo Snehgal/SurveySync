@@ -1,0 +1,247 @@
+/* Overall Styles */
+body {
+    font-family: 'Montserrat', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #121212; /* Dark background */
+    color: #e0e0e0; /* Light text color */
+    scroll-behavior: smooth; /* Smooth scrolling */
+    /* background-image: "../bg.jpg"; */
+}
+
+#downloadBtn {
+    background-color: #007BFF;  /* Blue color */
+    border: none;
+    margin-top: 10px; 
+    padding: 12px;  /* Increase padding for a bigger button */
+    border-radius: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;  /* Adjust width */
+    height: 30px; /* Adjust height */
+    background-color: #007bff; /* Keep the blue color */
+    border: none; /* Remove border if any */
+    border-radius: 20px; /* Match the rounded style */
+    box-shadow: 2px 2px 8px #000000ed; /* Black shadow */
+    transition: background-color 0.2s;
+}
+
+
+#downloadBtn:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+header {
+    width: 100%;
+    height: 7%;
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+/* Filters Section */
+.filters {
+    height: 10vh;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    padding: 20px;
+    background-color: #1f1f1f; /* Dark background */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5);
+    margin-top: 5%;
+}
+
+/* Base styles for select element */
+select {
+    font-family: 'Montserrat', sans-serif;
+    padding: 10px 20px;
+    margin: 5px;
+    border: none;
+    border-radius: 25px;
+    margin-left: 15px;
+    margin-right: 15px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    background-color: #333333; /* Dark select background */
+    color: #e0e0e0; /* Light text color */
+    font-size: 16px;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+    transition: background-color 0.2s;
+    -webkit-appearance: none; /* Remove default arrow in Webkit browsers */
+    -moz-appearance: none; /* Remove default arrow in Firefox */
+    appearance: none; /* Remove default arrow */
+    position: relative;
+    padding-right: 40px; /* Space for the custom arrow */
+    background-image: linear-gradient(45deg, transparent 50%, #e0e0e0 50%), linear-gradient(135deg, #e0e0e0 50%, transparent 50%);
+    background-position: right 15px top 50%, right 10px top 50%;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+}
+
+select:hover {
+    background-color: #444444; /* Slightly lighter dark background */
+    color: #e0e0e0; /* Light text color */
+    font-size: 16px;
+    box-shadow: inset 0px 0px 35px -15px rgba(0, 0, 0, 0.5);
+}
+
+select:focus {
+    background-color: #555555; /* Focused dark background */
+    color: #e0e0e0; /* Light text color */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+/* Hide the default select dropdown arrow and style it */
+select::-ms-expand {
+    display: none;
+}
+
+.select-container {
+    position: relative;
+    display: inline-block;
+    background-color: #121212; /* Dark background */
+}
+
+/* Chart Section */
+.chart {
+    display: flex;
+    justify-content: center;
+    height: 60vh;
+    padding: 20px;
+    background-image: "../bg.jpg";
+    background-color: #1f1f1f; /* Dark background */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5);
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+#barChart {
+    max-width: 100%;
+    height: auto;
+}
+
+footer {
+    width: 100%;
+    height: 4%;
+    padding: 10px;
+    background-color: #007BFF;
+    color: #f0f0f0;
+    text-align: center;
+    font-size: 14px;
+    border-top: 1px solid #000000;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+}
+
+/* Loading Spinner */
+.loading {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5em;
+    color: #e0e0e0; /* Light text color */
+}
+
+#pieChart {
+    width: 100%;
+    height: 100%;
+    max-width: 600px; /* Adjust max-width as needed */
+    margin: auto;
+    display: block;
+}
+
+/* Chart Container */
+.chart {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    background-color: #222; /* Dark background for better contrast */
+    border-radius: 8px; /* Rounded corners for the chart container */
+}
+
+/* Chart Canvas */
+#chartCanvas {
+    width: 100%;
+    height: 100%;
+    max-width: 700px;
+    margin: auto;
+    display: block;
+}
+
+/* Toggle Switch Styles */
+.chart-toggle {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.chart-toggle select {
+    font-family: 'Montserrat', sans-serif;
+    height: 90%;
+    padding: 5px 20px;
+    margin: 4px;
+    border: none;
+    border-radius: 25px;
+    margin-left: 15px;
+    margin-right: 15px;
+    margin-bottom: 15px;
+    cursor: pointer;
+    background-color: #333333; /* Dark select background */
+    color: #e0e0e0; /* Light text color */
+    font-size: 16px;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+    transition: background-color 0.2s;
+    -webkit-appearance: none; /* Remove default arrow in Webkit browsers */
+    -moz-appearance: none; /* Remove default arrow in Firefox */
+    appearance: none; /* Remove default arrow */
+    position: relative;
+    padding-right: 40px; /* Space for the custom arrow */
+    background-image: linear-gradient(45deg, transparent 50%, #e0e0e0 50%), linear-gradient(135deg, #e0e0e0 50%, transparent 50%);
+    background-position: right 15px top 50%, right 10px top 50%;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+}
+
+.chart-toggle select:hover {
+    background-color: #444444; /* Slightly lighter dark background */
+    color: #e0e0e0; /* Light text color */
+    font-size: 16px;
+    box-shadow: inset 0px 0px 35px -15px rgba(0, 0, 0, 0.5);
+}
+
+.chart-toggle select:focus {
+    background-color: #555555; /* Focused dark background */
+    color: #e0e0e0; /* Light text color */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .filters {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    select {
+        width: 100%;
+        margin: 10px 0;
+    }
+}
