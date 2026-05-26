@@ -7,7 +7,8 @@
     require('dotenv').config({ path: "../.env" });
 
     const app = express();
-    const port = 4001; // Single port for both HTTP and WebSocket
+    const host = process.env.HOST || 'localhost';
+    const port = Number(process.env.ADMIN_PORT) || 4001; // Single port for both HTTP and WebSocket
 
     const uri = process.env.MONGODB_URI;
     let client;
@@ -270,7 +271,7 @@
         console.error('WebSocket Server Error:', error);
     });
 
-    console.log(`WebSocket server running at wss://esp8266-control.onrender.com/`);
+    console.log(`WebSocket server running at ws://${host}:${port}/`);
 
     // Get schedule records with optional filter
     app.get('/get-records', async (req, res) => {
@@ -410,7 +411,7 @@
     // Start Server
     server.listen(port, async () => {
         await connectToMongoDB();
-        console.log(`Server running at https://esp8266-control.onrender.com/`);
+        console.log(`Server running at http://${host}:${port}/`);
         // Uncomment if you want to empty collections
         // await emptyCollection("Helps");
         // await emptyCollection("Responses");

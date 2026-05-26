@@ -202,7 +202,9 @@
                     disconnectBtn.disabled = true;
 
                     // ws = new WebSocket('ws://localhost:8080');
-                    ws = new WebSocket('wss://esp8266-control.onrender.com');
+                    const wsProtocol = location.protocol === 'https:' ? 'wss' : 'ws';
+                    const wsUrl = `${wsProtocol}://${location.host}`;
+                    ws = new WebSocket(wsUrl);
 
                     ws.onopen = function () {
                         status.textContent = 'Connected';

@@ -5,6 +5,8 @@ const app = express();
 require('dotenv').config({ path: "../.env" });
 
 const uri = process.env.MONGODB_URI; // Use environment variable for URI
+const host = process.env.HOST || 'localhost';
+const port = Number(process.env.GRAPHS_PORT) || 3010;
 const dbName = 'ResponseLogging';
 let db;
 
@@ -22,8 +24,8 @@ async function connectDB() {
     try {
         await client.connect();
         db = client.db(dbName);
-        app.listen(3010, () => {
-            console.log('Server is running on http://localhost:3010');
+        app.listen(port, () => {
+            console.log(`Server is running on http://${host}:${port}`);
         });
     } catch (err) {
         console.error('Failed to connect to MongoDB:', err);

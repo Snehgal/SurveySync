@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const app = express();
-const port = 4000;
+const port = Number(process.env.DISPLAY_HELP_PORT) || 4000;
 
 const uri = process.env.MONGODB_URI;
 const dbName = 'ResponseLogging';
