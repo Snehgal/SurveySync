@@ -1,9 +1,9 @@
 // button
 document.getElementById('help-btn').onclick = function() {
-    window.open('https://help-responses.onrender.com', '_blank');
+    window.open('http://192.168.3.176:4000', '_blank');
 };
 document.getElementById('dshbrd').onclick = function() {
-    window.open('https://dashboard-e9g1.onrender.com/', '_blank');
+    window.open('http://192.168.3.176:3010', '_blank');
 };
 // Function to load room numbers into the dropdown
 function loadRoomNumbers() {

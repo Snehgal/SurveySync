@@ -229,7 +229,13 @@
         
                 const tableID = parseInt(values[0].trim(), 10);
                 const value = parseInt(values[1].trim(), 10);
-        
+                
+                if (tableID === 1111 && value === -1) {
+                    console.log('ESP32 test signal received — device online');
+                    broadcastToClients('ESP32_CONNECTED');
+                    return;
+                }
+                
                 if (isNaN(tableID) || isNaN(value)) {
                     console.error('One or more values could not be parsed as integers.');
                     broadcastToClients('Error: Invalid tableID or value received.');
