@@ -245,18 +245,20 @@
             display: none;
         }
     </style>
+    <link rel="stylesheet" href="/styles.css">
 </head>
 
 <body>
-    <header>
-        <a class="back-link" href="/">&#x21a9;</a>
-        Help Calls for <%= labNumber %>
-        <a class="view-toggle" href="/lab/<%= labID %>/map">Map View</a>
+    <header class="site-header">
+        <a class="back-link" href="/" aria-label="Back to ongoing labs">&#x2190;</a>
+        <div class="brand"><img src="/ece-logo.png" alt="IIIT-Delhi ECE"><span></span><div><strong>SurveySync</strong></div></div>
+        <a class="view-toggle" href="/lab/<%= labID %>/map">Map view</a>
     </header>
     <div id="notification" class="notification hidden"></div>
-    <div class="container">
+    <div class="container detail-container">
+        <div class="page-heading"><h1><%= labNumber %></h1><p>Review and classify requests from this laboratory.</p></div>
         <div class="scrollable-container">
-            <div class="total-records">Active Helps: <%= helps.length %>
+            <div class="total-records"><span>Active helps</span><strong><%= helps.length %></strong>
             </div>
             <% helps.forEach(help=> { %>
                 <div class="chip" data-tooltip="Click to log an issue"
@@ -285,7 +287,7 @@
                 <% }) %>
         </div>
         <div class="scrollable-container">
-            <div class="total-records">Unresolved Helps: <%= UnresolvedHelps.length %>
+            <div class="total-records"><span>Unresolved helps</span><strong><%= UnresolvedHelps.length %></strong>
             </div>
             <% UnresolvedHelps.forEach(UnresolvedHelp=> { %>
                 <span class="chip unresolved-chip" data-tooltip="Under Inspection">
@@ -297,7 +299,7 @@
         </div>
     </div>
     <footer>
-        Made by Chirag Sehgal
+        <span>SurveySync</span><span>Department of Electronics &amp; Communications Engineering</span>
     </footer>
     <script>
         // Refresh the page every 10 seconds

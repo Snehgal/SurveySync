@@ -2,8 +2,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ensure Chart.js is loaded
     if (typeof Chart !== 'undefined') {
         // Set the global font family and color for Chart.js
-        Chart.defaults.font.family = 'Montserrat';
-        Chart.defaults.color = '#ffffff80'; // Set default font color to white
+        Chart.defaults.font.family = 'Inter';
+        Chart.defaults.color = '#667170';
+        // Unregister datalabels from global scope to prevent infinite resize loops.
+        // It will be registered per-chart via the plugins array instead.
+        Chart.unregister(ChartDataLabels);
     }
     
 document.getElementById("downloadBtn").replaceWith(document.getElementById("downloadBtn").cloneNode(true));
@@ -11,7 +14,7 @@ document.getElementById("downloadBtn").replaceWith(document.getElementById("down
 document.getElementById("downloadBtn").addEventListener("click", async (event) => {
     event.preventDefault();
 
-    const button = event.target;
+    const button = event.currentTarget;
     button.disabled = true; // Disable to prevent double-clicks
 
     await fetchRecordsForDownload(); // Fetch data first
@@ -117,15 +120,19 @@ document.getElementById("downloadBtn").addEventListener("click", async (event) =
                 datasets: [{
                     label: 'Counts',
                     data: [data.positiveResponses, data.negativeResponses, data.resolvedHelps, data.unresolvedHelps],
-                    backgroundColor: ['#0af02c', '#b3041f', '#facc00', '#007BFF'],
-                    borderColor: ['#06a11e', '#5e0412', '#ba8d04', '#0225a6'],
+                    backgroundColor: ['#2f8a63', '#c94c4c', '#d8a23a', '#116a69'],
+                    borderColor: ['#246d4e', '#9f3737', '#b98725', '#0b4b4b'],
                     borderWidth: 4,
                     borderRadius: 15
                 }]
             },
+            plugins: [ChartDataLabels],
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                layout: {
+                    padding: { top: 24 }
+                },
                 plugins: {
                     legend: {
                         display: false,
@@ -153,7 +160,9 @@ document.getElementById("downloadBtn").addEventListener("click", async (event) =
                     datalabels: {
                         display: true,
                         anchor: 'end',
-                        align: 'top',
+                        align: 'end',
+                        clamp: true,
+                        clip: true,
                         formatter: function(value) {
                             return value;
                         },
@@ -184,8 +193,8 @@ document.getElementById("downloadBtn").addEventListener("click", async (event) =
                         },
                         grid: {
                             display: true,
-                            color:'#ffffff50',
-                            borderColor: '#ffffff',
+                            color:'#dbe5e2',
+                            borderColor: '#dbe5e2',
                             borderWidth: 2,
                             lineWidth: 0.5
                         }
@@ -202,13 +211,14 @@ document.getElementById("downloadBtn").addEventListener("click", async (event) =
                 labels: ['Positive Responses', 'Negative Responses', 'Resolved Help Calls', 'Unresolved Help Calls'],
                 datasets: [{
                     data: [data.positiveResponses, data.negativeResponses, data.resolvedHelps, data.unresolvedHelps],
-                    backgroundColor: ['#0af02c', '#b3041f', '#facc00', '#007BFF'],
-                    borderColor: ['#222222', '#222222', '#222222', '#222222'],
+                    backgroundColor: ['#2f8a63', '#c94c4c', '#d8a23a', '#116a69'],
+                    borderColor: ['#ffffff', '#ffffff', '#ffffff', '#ffffff'],
                     borderWidth: 5,
                     borderRadius: 3,
                     hoverOffset: 10
                 }]
             },
+            plugins: [ChartDataLabels],
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -241,8 +251,10 @@ document.getElementById("downloadBtn").addEventListener("click", async (event) =
                     datalabels: {
                         display: true,
                         color: '#fff',
-                        anchor: 'end',
-                        align: 'top',
+                        anchor: 'center',
+                        align: 'center',
+                        clamp: true,
+                        clip: true,
                         formatter: function(value) {
                             return value;
                         },
@@ -268,13 +280,14 @@ document.getElementById("downloadBtn").addEventListener("click", async (event) =
                 labels: ['Positive Responses', 'Negative Responses', 'Resolved Help Calls', 'Unresolved Help Calls'],
                 datasets: [{
                     data: [data.positiveResponses, data.negativeResponses, data.resolvedHelps, data.unresolvedHelps],
-                    backgroundColor: ['#0af02c', '#b3041f', '#facc00', '#007BFF'],
-                    borderColor: ['#222222', '#222222', '#222222', '#222222'],
+                    backgroundColor: ['#2f8a63', '#c94c4c', '#d8a23a', '#116a69'],
+                    borderColor: ['#ffffff', '#ffffff', '#ffffff', '#ffffff'],
                     borderWidth: 5,
                     borderRadius: 3,
                     hoverOffset: 10
                 }]
             },
+            plugins: [ChartDataLabels],
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -307,8 +320,10 @@ document.getElementById("downloadBtn").addEventListener("click", async (event) =
                     datalabels: {
                         display: true,
                         color: '#fff',
-                        anchor: 'end',
-                        align: 'top',
+                        anchor: 'center',
+                        align: 'center',
+                        clamp: true,
+                        clip: true,
                         formatter: function(value) {
                             return value;
                         },
@@ -352,3 +367,4 @@ document.getElementById("downloadBtn").addEventListener("click", async (event) =
 
     fetchData(); // Initial data fetch
 });
+

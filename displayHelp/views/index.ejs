@@ -95,21 +95,29 @@
             left: 0;
         }
     </style>
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
     <div class="container">
-        <header>Ongoing Labs</header>
+        <header class="site-header">
+            <div class="brand"><img src="/ece-logo.png" alt="IIIT-Delhi ECE"><span></span><div><strong>SurveySync</strong></div></div>
+            <div class="header-label">Tracking</div>
+        </header>
+        <div class="page-heading"><h1>Ongoing labs</h1><p>Select a laboratory to view its active assistance requests.</p></div>
+        <div class="lab-list">
         <% labs.forEach(lab => { %>
             <a class="lab-link" href="/lab/<%= lab.labID %>/map">
                 <div class="lab">
-                    <h2>&emsp;&emsp;<%= lab.labNumber %>&emsp;&emsp; </h2>
-                    <span class="expand-icon">&#x27A4;</span> <!-- Right arrow icon -->
+                    <div><span class="lab-kicker">Active session</span><h2><%= lab.labNumber %></h2></div>
+                    <span class="expand-icon">&#x2192;</span>
                 </div>
             </a>
         <% }); %>
+        <% if (labs.length === 0) { %><div class="empty-state"><span>All clear</span><p>There are no ongoing labs right now.</p></div><% } %>
+        </div>
     </div>
     <footer>
-        Made by Chirag Sehgal
+        <span>SurveySync</span><span>Department of Electronics &amp; Communications Engineering</span>
     </footer>
     <script>
         // Refresh the page every 15 seconds

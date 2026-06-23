@@ -1,4 +1,4 @@
-// button
+﻿// button
 document.getElementById('help-btn').onclick = function() {
     window.open('http://192.168.3.176:4000', '_blank');
 };
@@ -36,10 +36,10 @@ const toggleIndicator = document.getElementById('toggle-indicator');
 dataHeading.addEventListener('click', function () {
     if (dataContainerS.style.display === 'none') {
         dataContainerS.style.display = 'block';
-        toggleIndicator.textContent = '▼'; // Up arrow when expanded
+        toggleIndicator.textContent = 'v'; // Expanded
     } else {
         dataContainerS.style.display = 'none';
-        toggleIndicator.textContent = '▶'; // Down arrow when collapsed
+        toggleIndicator.textContent = '>'; // Collapsed
     }
 });
 
@@ -244,9 +244,7 @@ window.onload = function () {
     loadLayoutRoomNumbers();
 };
 
-// ═══════════════════════════════════════════════════
-// ══  Seat Layout Manager
-// ═══════════════════════════════════════════════════
+// Seat layout manager
 
 function loadLayoutRoomNumbers() {
     fetch('/get-room-numbers')
@@ -254,7 +252,7 @@ function loadLayoutRoomNumbers() {
         .then(rooms => {
             const sel = document.getElementById('layoutRoom');
             // keep the placeholder
-            sel.innerHTML = '<option value="">— Select Room —</option>';
+            sel.innerHTML = '<option value="">-- Select Room --</option>';
             rooms.forEach(room => {
                 const opt = document.createElement('option');
                 opt.value = room;
@@ -285,16 +283,16 @@ document.getElementById('layoutRoom').addEventListener('change', function () {
         return;
     }
 
-    statusDiv.innerHTML = '<span style="color:#888;">Loading…</span>';
+    statusDiv.innerHTML = '<span style="color:#888;">Loading...</span>';
 
     fetch('/get-seat-layout/' + encodeURIComponent(room))
         .then(r => r.json())
         .then(data => {
             if (data.exists) {
                 const layout = data.layout;
-                statusDiv.innerHTML = '<span style="color:#28a745; font-weight:600;">✔ Layout exists</span>'
+                statusDiv.innerHTML = '<span style="color:#28a745; font-weight:600;">Layout exists</span>'
                     + ' &nbsp;|&nbsp; '
-                    + '<span>' + layout.totalRows + ' rows × ' + layout.seatsPerRow + ' seats'
+                    + '<span>' + layout.totalRows + ' rows x ' + layout.seatsPerRow + ' seats'
                     + (layout.oddRowPosition ? ' (odd row: ' + layout.oddRowPosition + ')' : '')
                     + '</span>';
 
@@ -311,7 +309,7 @@ document.getElementById('layoutRoom').addEventListener('change', function () {
                 existingPreview.innerHTML = '<h3 style="color:#333; margin-bottom:8px;">Current Layout</h3>'
                     + buildGridPreviewHTML(layout.totalRows, layout.seatsPerRow, layout.oddRowPosition || 'right', startID);
             } else {
-                statusDiv.innerHTML = '<span style="color:#dc3545; font-weight:600;">✘ NO LAYOUT ADDED</span>';
+                statusDiv.innerHTML = '<span style="color:#dc3545; font-weight:600;">No layout added</span>';
                 // Clear inputs
                 document.getElementById('layoutRows').value = '';
                 document.getElementById('layoutSeatsPerRow').value = '';
@@ -324,7 +322,7 @@ document.getElementById('layoutRoom').addEventListener('change', function () {
         });
 });
 
-// ── Grid layout computation (mirrors server-side computeGridLayout) ──
+// Grid layout computation (mirrors server-side computeGridLayout)
 
 function computeGridLayoutClient(totalRows, oddRowPosition) {
     const groups = [];
@@ -394,7 +392,7 @@ function buildGridPreviewHTML(totalRows, seatsPerRow, oddRowPosition, startTable
     groups.forEach((group, gi) => {
         const label = group.length === 1
             ? 'Row ' + group[0] + ' (solo)'
-            : 'Rows ' + group[0] + '–' + group[1] + ' (pair)';
+            : 'Rows ' + group[0] + '-' + group[1] + ' (pair)';
         html += '<span class="preview-group-label">' + label + '</span>';
         if (gi < groups.length - 1) html += '<span class="preview-aisle-label">aisle</span>';
     });
@@ -411,8 +409,8 @@ document.getElementById('previewLayoutBtn').addEventListener('click', function (
     const oddRowPosition = document.getElementById('layoutOddRow').value;
     const startTableID = parseInt(document.getElementById('layoutStartID').value, 10);
 
-    if (isNaN(totalRows) || totalRows < 1) { showModal('Enter a valid total rows (≥ 1)'); return; }
-    if (isNaN(seatsPerRow) || seatsPerRow < 1) { showModal('Enter a valid seats per row (≥ 1)'); return; }
+    if (isNaN(totalRows) || totalRows < 1) { showModal('Enter a valid total rows (>= 1)'); return; }
+    if (isNaN(seatsPerRow) || seatsPerRow < 1) { showModal('Enter a valid seats per row (>= 1)'); return; }
     if (isNaN(startTableID) || startTableID < 1) { showModal('Enter a valid start table ID'); return; }
 
     const previewArea = document.getElementById('layoutPreviewArea');
@@ -470,3 +468,4 @@ document.getElementById('saveLayoutBtn').addEventListener('click', function () {
         showModal('Error saving layout');
     });
 });
+

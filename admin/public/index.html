@@ -5,23 +5,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin | SurveySync</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./styles.css">
 </head>
 
 <body>
-    <header>Admin: Feedback Collection</header>
-    <nav>
+    <header class="site-header">
+        <div class="brand">
+            <img src="./ece-logo.png" alt="IIIT-Delhi ECE">
+            <span class="brand-divider" aria-hidden="true"></span>
+            <div>
+                <strong>SurveySync</strong>
+            </div>
+        </div>
+        <div class="header-label">Admin</div>
+    </header>
+    <nav aria-label="Admin sections">
         <button onclick="scrollToSection('containerS')" id="schedule-section-btn">Schedule</button>
         <button onclick="scrollToSection('layout-section')" id="layout-btn">Seat Layout</button>
         <button onclick="scrollToSection('activity-section')" id="activity-btn">Activity</button>
-        <button id="help-btn">Help-Tracking</button>
-        <button id="dshbrd">Data Visualisation</button>
+        <button id="help-btn">Help tracking</button>
+        <button id="dshbrd">Analytics</button>
     </nav>
     
     <div id="containerS" class="section">
         <!-- Schedule Form -->
-        <h2>Schedule</h2>
+        <div class="section-heading">
+            <h1>Schedule</h1>
+            <p>Create and review laboratory sessions.</p>
+        </div>
         <form id="scheduleForm">
             <div class="form-row">
                 <div>
@@ -65,7 +77,7 @@
                     <input type="date" id="repeatUntil" name="repeatUntil">
                 </div>
             </div>
-            <button type="submit">Add Record</button>
+            <button class="primary-action" type="submit">Add schedule</button>
         </form>
         <!-- Modal -->
         <div id="myModal" class="modal">
@@ -79,7 +91,7 @@
          <div id="data-containerS-wrapper">
             <h2 id="data-heading" style="font-weight: bold; cursor: pointer;">
                 <span id="toggle-indicator" style="font-size: 18px; margin-left: 10px;">▼</span>
-                Schedule Records
+                Schedule records
             </h2>
             <div class="schedule-tabs">
                 <button class="tab-btn active" data-tab="ongoing">Ongoing</button>
@@ -96,7 +108,10 @@
     <!-- ── Seat Layout Section ── -->
     <div id="layout-section" class="section">
         <div id="layout-container">
-            <h2>Seat Layout Manager</h2>
+            <div class="section-heading compact">
+                <h2>Seat layout</h2>
+                <p>Define table positions for each laboratory.</p>
+            </div>
 
             <div class="layout-form">
                 <div class="form-row">
@@ -154,7 +169,10 @@
         <div id="activity-section" class="section">
             <div id="container">
                 <div id="data-container-wrapper">
-                    <h2>Activity</h2>
+                    <div class="section-heading compact">
+                        <h2>Activity</h2>
+                        <p>Monitor incoming responses and assistance requests.</p>
+                    </div>
                     <div id="data-container"></div>
                 </div>
                 <div id="controls">
@@ -168,7 +186,8 @@
             </div>
         </div>
         <footer>
-            Made by Chirag Sehgal
+            <span>SurveySync</span>
+            <span>Department of Electronics & Communications Engineering</span>
         </footer>
         <script>
             let ws;

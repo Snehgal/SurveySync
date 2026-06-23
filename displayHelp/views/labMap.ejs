@@ -387,13 +387,15 @@
             left: 0;
         }
     </style>
+    <link rel="stylesheet" href="/styles.css">
 </head>
 
 <body>
-    <header>
-        <a class="back-link" href="/">&#x21a9;</a>
+    <header class="site-header map-header">
+        <a class="back-link" href="/" aria-label="Back to ongoing labs">&#x2190;</a>
+        <div class="brand"><img src="/ece-logo.png" alt="IIIT-Delhi ECE"><span></span><div><strong>SurveySync</strong></div></div>
         <%= labNumber %> — Seat Map
-        <a class="view-toggle" href="/lab/<%= labID %>">List View</a>
+        <a class="view-toggle" href="/lab/<%= labID %>">List view</a>
     </header>
 
     <div class="stats-bar">
@@ -464,7 +466,7 @@
         <div class="issue-cancel" onclick="closeIssuePanel()">Cancel</div>
     </div>
 
-    <footer>Made by Chirag Sehgal</footer>
+    <footer><span>SurveySync</span><span>Department of Electronics &amp; Communications Engineering</span></footer>
 
     <script>
         let selectedTableID = null;
