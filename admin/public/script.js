@@ -5,6 +5,15 @@ document.getElementById('help-btn').onclick = function() {
 document.getElementById('dshbrd').onclick = function() {
     window.open('http://192.168.3.176:3010', '_blank');
 };
+// Log out the lab incharge and return to the login page
+const logoutBtn = document.getElementById('logout-btn');
+if (logoutBtn) {
+    logoutBtn.onclick = function() {
+        fetch('/logout', { method: 'POST' })
+            .then(function() { window.location.href = '/login'; })
+            .catch(function() { window.location.href = '/login'; });
+    };
+}
 // Function to load room numbers into the dropdown
 function loadRoomNumbers() {
     fetch('/get-room-numbers')

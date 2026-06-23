@@ -3,6 +3,8 @@
     const http = require('http');
     const bodyParser = require('body-parser');
     const os = require('os');
+    const path = require('path');
+    const crypto = require('crypto');
     const { MongoClient, ServerApiVersion } = require('mongodb');
     require('dotenv').config({ path: "../.env" });
 
@@ -19,6 +21,88 @@
 
     // Middleware
     app.use(bodyParser.json());
+
+    // ─────────────────────────────────────────────
+    // Admin authentication (lab incharge only)
+    // ─────────────────────────────────────────────
+    const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'surveysync';
+    const AUTH_COOKIE = 'ss_admin';
+    const SESSION_MAX_AGE = 8 * 60 * 60 * 1000; // 8 hours
+    // Stable token derived from the credentials so restarts don't force a re-login
+    const AUTH_TOKEN = crypto
+        .createHash('sha256')
+        .update(`${ADMIN_USERNAME}:${ADMIN_PASSWORD}:surveysync-admin-secret`)
+        .digest('hex');
+
+    function parseCookies(req) {
+        const header = req.headers.cookie || '';
+        return header.split(';').reduce((acc, part) => {
+            const idx = part.indexOf('=');
+            if (idx > -1) {
+                const key = part.slice(0, idx).trim();
+                const value = part.slice(idx + 1).trim();
+                if (key) acc[key] = decodeURIComponent(value);
+            }
+            return acc;
+        }, {});
+    }
+
+    function isAuthenticated(req) {
+        return parseCookies(req)[AUTH_COOKIE] === AUTH_TOKEN;
+    }
+
+    // Prevent the browser from caching authenticated pages/data.
+    // Without this, the back/forward cache can restore the dashboard after logout.
+    function noStore(res) {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+    }
+
+    // Guard for protected API routes (used only by the authenticated admin UI)
+    function requireAuth(req, res, next) {
+        noStore(res);
+        if (isAuthenticated(req)) return next();
+        return res.status(401).json({ success: false, message: 'Not authenticated' });
+    }
+
+    // Serve the login page (publicly accessible)
+    app.get('/login', (req, res) => {
+        noStore(res);
+        if (isAuthenticated(req)) return res.redirect('/');
+        res.sendFile(path.join(__dirname, 'public', 'login.html'));
+    });
+
+    // Validate credentials and start a session
+    app.post('/login', (req, res) => {
+        const { username, password } = req.body || {};
+        if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+            res.cookie(AUTH_COOKIE, AUTH_TOKEN, {
+                httpOnly: true,
+                sameSite: 'lax',
+                maxAge: SESSION_MAX_AGE
+            });
+            return res.json({ success: true });
+        }
+        return res.status(401).json({ success: false, message: 'Invalid username or password' });
+    });
+
+    // End the session
+    app.post('/logout', (req, res) => {
+        res.clearCookie(AUTH_COOKIE);
+        res.json({ success: true });
+    });
+
+    // Gate the admin dashboard itself — unauthenticated users go to /login.
+    // Served directly (not via static) with no-store so the browser's back/forward
+    // cache can't restore it after logout.
+    app.get(['/', '/index.html'], (req, res) => {
+        noStore(res);
+        if (!isAuthenticated(req)) return res.redirect('/login');
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    });
+
     app.use(express.static('public'));
 
     async function getLabID(tableID) {
@@ -280,7 +364,7 @@
     console.log(`WebSocket server running at ws://${host}:${port}/`);
 
     // Get schedule records with optional filter
-    app.get('/get-records', async (req, res) => {
+    app.get('/get-records', requireAuth, async (req, res) => {
         try {
             await connectToMongoDB();
             const filter = req.query.filter || 'all';
@@ -310,7 +394,7 @@
     });
 
     // Endpoint to add record(s) to "Schedule" (supports bulk weekly repeat)
-    app.post('/add-schedule', async (req, res) => {
+    app.post('/add-schedule', requireAuth, async (req, res) => {
         try {
             await connectToMongoDB(); // Ensure connection is established
             const { records } = req.body;
@@ -346,7 +430,7 @@
     });
 
     // Add this function to fetch unique room numbers from the "Schedule" collection
-    app.get('/get-room-numbers', async (req, res) => {
+    app.get('/get-room-numbers', requireAuth, async (req, res) => {
         try {
             const collection = db.collection('Tables');
             // Use aggregation to get distinct '_id' values
@@ -365,7 +449,7 @@
     });
 
     // Fetch existing seat layout for a room
-    app.get('/get-seat-layout/:labNo', async (req, res) => {
+    app.get('/get-seat-layout/:labNo', requireAuth, async (req, res) => {
         try {
             await connectToMongoDB();
             const labNo = req.params.labNo;
@@ -383,7 +467,7 @@
     });
 
     // Save (upsert) a seat layout for a room
-    app.post('/save-seat-layout', async (req, res) => {
+    app.post('/save-seat-layout', requireAuth, async (req, res) => {
         try {
             await connectToMongoDB();
             const { labNo, totalRows, seatsPerRow, oddRowPosition, seats } = req.body;

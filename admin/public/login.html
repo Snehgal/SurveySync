@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | SurveySync</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+    <style>
+        .auth-wrap {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 22px;
+            padding: 48px 20px;
+        }
+
+        .auth-card {
+            width: min(420px, 100%);
+            padding: clamp(28px, 5vw, 42px);
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .auth-brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 6px;
+            margin-bottom: 26px;
+        }
+
+        .auth-brand img { width: 96px; height: 64px; object-fit: contain; }
+        .auth-brand .eyebrow { margin-top: 6px; }
+        .auth-card h1 { margin: 4px 0 2px; font-size: 22px; letter-spacing: -.02em; }
+        .auth-card .auth-sub { margin: 0; color: var(--muted); font-size: 12px; }
+
+        /* Scope the form so it doesn't pick up the dashboard's card styling */
+        .auth-card form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin: 0;
+            padding: 0;
+            background: none;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        .auth-submit {
+            width: 100%;
+            margin-top: 4px;
+            color: #fff;
+            background: var(--teal-dark);
+            border-color: var(--teal-dark);
+        }
+        .auth-submit:hover { background: #1d7172; }
+
+        .auth-error {
+            display: none;
+            margin: 0;
+            padding: 10px 13px;
+            color: #934646;
+            background: #fff1f1;
+            border: 1px solid #efd0d0;
+            border-radius: 9px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .auth-error.show { display: block; }
+
+        .auth-links {
+            width: min(420px, 100%);
+            display: flex;
+            gap: 12px;
+        }
+        .auth-link {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 14px 16px;
+            color: var(--ink);
+            text-decoration: none;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+        }
+        .auth-link:hover {
+            transform: translateY(-1px);
+            border-color: rgba(57, 170, 169, .4);
+            box-shadow: 0 8px 22px rgba(28, 47, 50, .08);
+        }
+        .auth-link strong { font-size: 13px; }
+        .auth-link span { color: var(--muted); font-size: 11px; }
+
+        .auth-foot { color: var(--muted); font-size: 11px; text-align: center; }
+
+        @media (max-width: 520px) {
+            .auth-links { flex-direction: column; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-wrap">
+        <div class="auth-card">
+            <div class="auth-brand">
+                <img src="./ece-logo.png" alt="IIIT-Delhi ECE">
+                <span class="eyebrow">SurveySync</span>
+                <h1>Admin Access</h1>
+                <p class="auth-sub">Restricted to the lab incharge. Please sign in to continue.</p>
+            </div>
+
+            <form id="loginForm" autocomplete="off">
+                <p id="authError" class="auth-error"></p>
+                <div>
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" autocomplete="username" required>
+                </div>
+                <div>
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" autocomplete="current-password" required>
+                </div>
+                <button class="auth-submit" type="submit">Sign in</button>
+            </form>
+        </div>
+
+        <div class="auth-links">
+            <a class="auth-link" id="helpLink" href="#">
+                <strong>Help Tracking</strong>
+                <span>View live help calls →</span>
+            </a>
+            <a class="auth-link" id="graphsLink" href="#">
+                <strong>Analytics</strong>
+                <span>Voting & response data →</span>
+            </a>
+        </div>
+
+        <p class="auth-foot">Department of Electronics &amp; Communications Engineering · IIIT-Delhi</p>
+    </div>
+
+    <script>
+        // Build links to the sibling apps on the same host
+        var host = location.hostname || 'localhost';
+        document.getElementById('helpLink').href = 'http://' + host + ':4000';
+        document.getElementById('graphsLink').href = 'http://' + host + ':3010';
+
+        var form = document.getElementById('loginForm');
+        var errorEl = document.getElementById('authError');
+
+        function showError(message) {
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+        }
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            errorEl.classList.remove('show');
+
+            var username = document.getElementById('username').value.trim();
+            var password = document.getElementById('password').value;
+
+            fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: username, password: password })
+            })
+                .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+                .then(function (result) {
+                    if (result.ok && result.data.success) {
+                        window.location.href = '/';
+                    } else {
+                        showError((result.data && result.data.message) || 'Login failed');
+                    }
+                })
+                .catch(function () {
+                    showError('Something went wrong. Please try again.');
+                });
+        });
+    </script>
+</body>
+
+</html>

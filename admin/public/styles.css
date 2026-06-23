@@ -51,6 +51,9 @@ button, input, select { font: inherit; }
 .brand strong { font-size: 15px; letter-spacing: -.02em; }
 .brand div span { margin-top: 4px; color: var(--muted); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
 .header-label { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.header-actions { display: flex; align-items: center; gap: 16px; }
+.logout-btn { min-height: 36px; padding: 0 16px; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 9px; font-size: 12px; }
+.logout-btn:hover { color: var(--ink); background: var(--canvas); box-shadow: none; transform: none; }
 .header-context { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 12px; font-weight: 600; }
 .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 4px rgba(59, 141, 104, .12); }
 
