@@ -1,9 +1,9 @@
-﻿// button
+// button
 document.getElementById('help-btn').onclick = function() {
-    window.open('http://192.168.3.176:4000', '_blank');
+    window.open(`http://${location.hostname}:4000`, '_blank');
 };
 document.getElementById('dshbrd').onclick = function() {
-    window.open('http://192.168.3.176:3010', '_blank');
+    window.open(`http://${location.hostname}:3010`, '_blank');
 };
 // Log out the lab incharge and return to the login page
 const logoutBtn = document.getElementById('logout-btn');

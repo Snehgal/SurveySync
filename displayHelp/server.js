@@ -1,4 +1,5 @@
-require('dotenv').config({ path: "../.env" });
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const bodyParser = require('body-parser');
 const express = require('express');
 const { MongoClient, ServerApiVersion } = require('mongodb');
@@ -15,7 +16,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Serve static files
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 let db;
 

@@ -2,7 +2,7 @@ const express = require('express');
 const { MongoClient } = require('mongodb');
 const path = require('path');
 const app = express();
-require('dotenv').config({ path: "../.env" });
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const uri = process.env.MONGODB_URI; // Use environment variable for URI
 const host = process.env.HOST || 'localhost';

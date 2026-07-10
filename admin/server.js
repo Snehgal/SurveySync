@@ -6,7 +6,7 @@
     const path = require('path');
     const crypto = require('crypto');
     const { MongoClient, ServerApiVersion } = require('mongodb');
-    require('dotenv').config({ path: "../.env" });
+    require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
     const app = express();
     const host = process.env.HOST || 'localhost';
@@ -103,7 +103,7 @@
         res.sendFile(path.join(__dirname, 'public', 'index.html'));
     });
 
-    app.use(express.static('public'));
+    app.use(express.static(path.join(__dirname, 'public')));
 
     async function getLabID(tableID) {
         try {
