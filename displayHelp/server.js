@@ -10,6 +10,7 @@ const uri = process.env.MONGODB_URI;
 const dbName = 'ResponseLogging';
 
 app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 // Middleware for parsing request bodies
 app.use(bodyParser.json());
