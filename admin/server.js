@@ -146,12 +146,18 @@
 
     async function logHelpStart(labID, tableID) {
         const helpLoggingCollection = db.collection('Helps');
-        const helpLoggingDoc = {
-            labID: labID,
-            tableID: tableID,
-            helpStarted: toIST(new Date())
-        };
         try {
+            // Close any existing open help for this table to prevent duplicates
+            await helpLoggingCollection.updateMany(
+                { tableID: tableID, helpEnded: { $exists: false } },
+                { $set: { helpEnded: toIST(new Date()) } }
+            );
+
+            const helpLoggingDoc = {
+                labID: labID,
+                tableID: tableID,
+                helpStarted: toIST(new Date())
+            };
             await helpLoggingCollection.insertOne(helpLoggingDoc);
             console.log('Inserted new document into Helps (help started)');
             broadcastToClients('Help started for table ' + tableID);
@@ -165,19 +171,14 @@
         const helpLoggingCollection = db.collection('Helps');
         
         try {
-            // Find the latest help record that hasn't ended yet
-            const latestRecord = await helpLoggingCollection.findOne(
-                { labID: labID, tableID: tableID, helpEnded: { $exists: false } },
-                { sort: { helpStarted: -1 } }
+            // Close ALL open help records for this table (handles duplicates)
+            const result = await helpLoggingCollection.updateMany(
+                { tableID: tableID, helpEnded: { $exists: false } },
+                { $set: { helpEnded: toIST(new Date()) } }
             );
             
-            if (latestRecord) {
-                // Help exists and hasn't ended, so mark it as ended
-                await helpLoggingCollection.updateOne(
-                    { _id: latestRecord._id },
-                    { $set: { helpEnded: toIST(new Date()) } }
-                );
-                console.log('Updated document in Helps with helpEnded for table ' + tableID);
+            if (result.modifiedCount > 0) {
+                console.log('Closed ' + result.modifiedCount + ' help record(s) for table ' + tableID);
                 broadcastToClients('Help ended for table ' + tableID);
             } else {
                 // No active help found, ignore the end signal

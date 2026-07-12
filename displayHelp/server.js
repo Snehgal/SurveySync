@@ -270,7 +270,7 @@ app.get('/lab/:labID/map', async (req, res) => {
             gridTemplateColumns: gridTemplate,
             totalGridCols,
             seatsPerRow: layout.seatsPerRow,
-            activeHelps: helps.length,
+            activeHelps: helpMap.size,
             unresolvedCount: unresolvedHelps.length
         });
 
