@@ -279,6 +279,10 @@
 
     // WebSocket Setup
     const clients = new Set();
+
+    // Debounce rapid-fire help signals from ESP32 button bounce
+    const lastHelpEvent = new Map();
+    const HELP_DEBOUNCE_MS = 3000;
     /**
              * Broadcasts a message to all connected WebSocket clients.
              * @param {string} message - The message to send.
@@ -329,6 +333,18 @@
         
                 const labID = await getLabID(tableID);
         
+                if (value === 2 || value === 3) {
+                    // Debounce: ignore if same table sent same signal within 3s
+                    const debounceKey = tableID + ':' + value;
+                    const now = Date.now();
+                    const lastTime = lastHelpEvent.get(debounceKey) || 0;
+                    if (now - lastTime < HELP_DEBOUNCE_MS) {
+                        console.log('Debounced rapid signal ' + value + ' for table ' + tableID);
+                        return;
+                    }
+                    lastHelpEvent.set(debounceKey, now);
+                }
+
                 if (value === 2) {
                     // Signal 2: Help starts
                     await logHelpStart(labID, tableID);

@@ -305,9 +305,19 @@
         // Real-time updates via admin WebSocket + fallback polling
         (function() {
             var wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
+            var reloadTimer = null;
 
             // Fallback reload every 30s
             var fallback = setTimeout(function() { location.reload(); }, 30000);
+
+            function scheduleReload() {
+                // Debounce: wait 1s after last event before reloading
+                clearTimeout(reloadTimer);
+                reloadTimer = setTimeout(function() {
+                    clearTimeout(fallback);
+                    location.reload();
+                }, 1000);
+            }
 
             try {
                 var ws = new WebSocket(wsProto + '://' + location.hostname + ':4001');
@@ -315,12 +325,10 @@
                     var msg = event.data;
                     if (msg.indexOf('Help started') !== -1 ||
                         msg.indexOf('Help ended') !== -1) {
-                        clearTimeout(fallback);
-                        location.reload();
+                        scheduleReload();
                     }
                 };
                 ws.onerror = function() {
-                    // If WS fails, shorten fallback to 10s
                     clearTimeout(fallback);
                     fallback = setTimeout(function() { location.reload(); }, 10000);
                 };
