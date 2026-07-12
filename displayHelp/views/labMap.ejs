@@ -514,10 +514,33 @@
             });
         }
 
-        // Auto-refresh every 10 seconds
-        setTimeout(function () {
-            location.reload();
-        }, 5000);
+        // Real-time updates via admin WebSocket + fallback polling
+        (function() {
+            var wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
+
+            // Always reload after 30s for urgency color updates
+            var fallback = setTimeout(function() { location.reload(); }, 30000);
+
+            try {
+                var ws = new WebSocket(wsProto + '://' + location.hostname + ':4001');
+                ws.onmessage = function(event) {
+                    var msg = event.data;
+                    if (msg.indexOf('Help started') !== -1 ||
+                        msg.indexOf('Help ended') !== -1) {
+                        clearTimeout(fallback);
+                        location.reload();
+                    }
+                };
+                ws.onerror = function() {
+                    // If WS fails, shorten fallback to 10s
+                    clearTimeout(fallback);
+                    fallback = setTimeout(function() { location.reload(); }, 10000);
+                };
+            } catch(e) {
+                clearTimeout(fallback);
+                fallback = setTimeout(function() { location.reload(); }, 10000);
+            }
+        })();
     </script>
 </body>
 
