@@ -173,7 +173,7 @@
         try {
             // Close ALL open help records for this table (handles duplicates)
             const result = await helpLoggingCollection.updateMany(
-                { tableID: tableID, helpEnded: { $exists: false } },
+                { labID: labID, tableID: tableID, helpEnded: { $exists: false } },
                 { $set: { helpEnded: toIST(new Date()) } }
             );
             
@@ -272,6 +272,7 @@
 
             } catch (error) {
                 console.error("Error connecting to MongoDB", error);
+                client = null;
                 throw error;
             }
         }
@@ -298,8 +299,10 @@
     }
     wss.on('connection', (ws) => {
         console.log('WebSocket client connected');
+        ws.isAlive = true;
+        ws.on('pong', () => { ws.isAlive = true; });
         clients.add(ws);
-        broadcastToClients("New Client Added | Total = " + clients.size);
+        // broadcastToClients("New Client Added | Total = " + clients.size);
 
         ws.on('message', async (message) => {
             try {
@@ -365,8 +368,8 @@
 
         ws.on('close', () => {
             console.log('WebSocket client disconnected');
-            broadcastToClients("Client Disconnected | Total = " + clients.size);
             clients.delete(ws);
+            // broadcastToClients("Client Disconnected | Total = " + clients.size);
         });
 
         ws.on('error', (error) => {
@@ -376,6 +379,18 @@
 
     wss.on('error', (error) => {
         console.error('WebSocket Server Error:', error);
+    });
+
+    const interval = setInterval(() => {
+        wss.clients.forEach((ws) => {
+            if (ws.isAlive === false) return ws.terminate();
+            ws.isAlive = false;
+            ws.ping();
+        });
+    }, 30000);
+
+    wss.on('close', () => {
+        clearInterval(interval);
     });
 
     console.log(`WebSocket server running at ws://${host}:${port}/`);

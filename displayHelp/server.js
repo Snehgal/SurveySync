@@ -42,19 +42,7 @@ async function connectToMongoDB() {
 function toIST(date) {
     // Convert UTC date to IST (UTC+5:30)
     const istOffset = 5 * 60 + 30; // IST is UTC+5:30
-    return new Date(date.getTime() - istOffset * 60 * 1000);
-}
-
-function toIST2(date) {
-    // Convert UTC date to IST (UTC+5:30)
-    const istOffset = 5 * 60 + 30; // IST is UTC+5:30
     return new Date(date.getTime() + istOffset * 60 * 1000);
-}
-
-function updateIST(date) {
-    // Convert UTC date to IST (UTC+5:30)
-    const istOffset = 5 * 60 + 30; // IST is UTC+5:30
-    return new Date(date.getTime() - istOffset * 60 * 1000);
 }
 
 /**
@@ -114,7 +102,7 @@ function computeGridLayout(totalRows, oddRowPosition) {
 
 app.get('/', async (req, res) => {
 try {
-    const currentTime = toIST2(new Date());
+    const currentTime = toIST(new Date());
     console.log('Current date and time in IST:', currentTime.toISOString());
 
     // Get ongoing schedules
@@ -168,7 +156,7 @@ app.get('/lab/:labID', async (req, res) => {
         // Convert unresolvedHelps to IST
         const unresolvedHelpsInIST = unresolvedHelps.map(help => ({
             ...help,
-            issueRaised: (new Date()) // Convert issueRaised to IST
+            issueRaised: toIST(new Date(help.issueRaised)) // Convert issueRaised to IST
         }));
 
         // Fetch active helps for the specific labID
@@ -193,7 +181,7 @@ app.get('/lab/:labID', async (req, res) => {
         res.render('lab', { labNumber, labID, helps:helpsInIST, UnresolvedHelps: unresolvedHelpsInIST });
     } catch (error) {
         console.error("Error fetching data:", error);
-        res.status(500).send(error);
+        res.status(500).send(error.message || 'Server error');
     }
 });
 

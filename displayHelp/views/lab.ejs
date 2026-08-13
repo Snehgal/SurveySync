@@ -311,12 +311,12 @@
             var fallback = setTimeout(function() { location.reload(); }, 30000);
 
             function scheduleReload() {
-                // Debounce: wait 1s after last event before reloading
+                // Debounce: wait 200ms after last event before reloading
                 clearTimeout(reloadTimer);
                 reloadTimer = setTimeout(function() {
                     clearTimeout(fallback);
                     location.reload();
-                }, 1000);
+                }, 200);
             }
 
             try {

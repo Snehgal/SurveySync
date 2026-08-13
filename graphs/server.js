@@ -68,6 +68,10 @@ app.get('/', async (req, res) => {
     }
 });
 
+function escapeRegExp(string) {
+    return string ? string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : null;
+}
+
 // Build a list of matching labIDs based on filter criteria (room, course, batch, lab)
 async function getMatchingLabIDs({ room, course, batch, lab }) {
     // Build a regex filter on labID in the Schedule collection
@@ -76,9 +80,9 @@ async function getMatchingLabIDs({ room, course, batch, lab }) {
 
     // Build regex for labID pattern: course-batch-lab
     const labIDParts = [
-        course || '[^-]+',
-        batch || '[^-]+',
-        lab || '[^-]+'
+        escapeRegExp(course) || '[^-]+',
+        escapeRegExp(batch) || '[^-]+',
+        escapeRegExp(lab) || '[^-]+'
     ];
     scheduleFilter.labID = { $regex: `^${labIDParts.join('-')}$` };
 
@@ -165,11 +169,12 @@ app.get('/download-data', async (req, res) => {
             };
         }
 
-        // Fetch all three collections in parallel
+        // Fetch all three collections in parallel (limit to 2000 each for safety if no filters)
+        const limitCount = (room || course || batch || lab) ? 0 : 2000;
         const [responses, helps, unresolvedHelps] = await Promise.all([
-            db.collection('Responses').find(labFilter).toArray(),
-            db.collection('Helps').find(labFilter).toArray(),
-            db.collection('UnresolvedHelps').find(labFilter).toArray()
+            db.collection('Responses').find(labFilter).limit(limitCount).toArray(),
+            db.collection('Helps').find(labFilter).limit(limitCount).toArray(),
+            db.collection('UnresolvedHelps').find(labFilter).limit(limitCount).toArray()
         ]);
 
         const records = [
