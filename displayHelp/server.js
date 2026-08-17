@@ -168,7 +168,7 @@ app.get('/lab/:labID', async (req, res) => {
         // Convert helpStarted to IST for the specific lab
         const helpsInIST = helps.map(help => ({
             ...help,
-            helpStarted: toIST(new Date(help.helpStarted))
+            helpStarted: new Date(help.helpStarted)
         }));
 
         // Fetch the lab number
@@ -236,7 +236,7 @@ app.get('/lab/:labID/map', async (req, res) => {
             }
 
             const helpStarted = helpData?.helpStarted
-                ? toIST(new Date(helpData.helpStarted))
+                ? new Date(helpData.helpStarted)
                 : null;
 
             return {
