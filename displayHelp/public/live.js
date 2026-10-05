@@ -60,8 +60,8 @@
         document.querySelectorAll('.seat[data-table-id]').forEach(seat => {
             const id = Number(seat.dataset.tableId), help = helps.get(id), issue = unresolved.get(id);
             const status = issue ? 'unresolved' : help ? 'help' : 'idle';
-            seat.classList.remove('idle', 'help', 'unresolved', 'help-medium', 'help-high');
-            seat.classList.add(status);
+            for (const state of ['idle', 'help', 'unresolved']) seat.classList.toggle(state, state === status);
+            if (status !== 'help') seat.classList.remove('help-medium', 'help-high');
             seat.dataset.startedAt = help && !issue ? help.startedAt : '';
             seat.tabIndex = status === 'help' && current.active ? 0 : -1;
             if (status === 'help') seat.setAttribute('role', 'button'); else seat.removeAttribute('role');
@@ -76,19 +76,37 @@
         if (document.body.dataset.view === 'list') {
             byId('list-help-count').textContent = helps.size;
             byId('list-unresolved-count').textContent = unresolved.size;
-            byId('list-helps').replaceChildren(...current.helps.map(h => {
+            updateList(byId('list-helps'), current.helps, () => {
                 const button = document.createElement('button'); button.className = 'chip'; button.type = 'button';
-                button.dataset.tableId = h.tableID; button.dataset.startedAt = h.startedAt;
-                button.textContent = `Table ${h.tableID} · Needs help`; return button;
-            }));
-            byId('list-unresolved').replaceChildren(...current.unresolved.map(h => {
+                return button;
+            }, (button, h) => {
+                button.dataset.startedAt = h.startedAt;
+            }, 'No active help requests.');
+            updateList(byId('list-unresolved'), current.unresolved, () => {
                 const item = document.createElement('div'); item.className = 'unresolved-detail';
-                const title = document.createElement('strong'); title.textContent = `Table ${h.tableID} · ${h.issue}`;
-                const remarks = document.createElement('p'); remarks.textContent = h.remarks || 'No remarks'; item.append(title, remarks); return item;
-            }));
-            if (!helps.size) byId('list-helps').textContent = 'No active help requests.';
-            if (!unresolved.size) byId('list-unresolved').textContent = 'No unresolved issues.';
+                item.append(document.createElement('strong'), document.createElement('p')); return item;
+            }, (item, h) => {
+                const title = `Table ${h.tableID} · ${h.issue}`, remarks = h.remarks || 'No remarks';
+                if (item.firstChild.textContent !== title) item.firstChild.textContent = title;
+                if (item.lastChild.textContent !== remarks) item.lastChild.textContent = remarks;
+            }, 'No unresolved issues.');
         }
+    }
+    function updateList(container, records, create, update, emptyText) {
+        const items = new Map([...container.children].map(item => [Number(item.dataset.tableId), item]));
+        const ids = new Set(records.map(record => record.tableID));
+        for (const [id, item] of items) if (!ids.has(id)) item.remove();
+        if (!records.length) {
+            if (container.textContent !== emptyText) container.textContent = emptyText;
+            return;
+        }
+        if (!container.children.length) container.textContent = '';
+        records.forEach((record, index) => {
+            const item = items.get(record.tableID) || create();
+            item.dataset.tableId = record.tableID;
+            update(item, record);
+            if (container.children[index] !== item) container.insertBefore(item, container.children[index] || null);
+        });
     }
     function tick() {
         if (!current) return;
@@ -180,5 +198,5 @@
     }
     setInterval(() => { if (stream.readyState !== EventSource.OPEN) refresh(); }, 5000);
     setInterval(tick, 1000);
-    window.addEventListener('pageshow', event => { if (event.persisted) location.reload(); });
+    window.addEventListener('pageshow', event => { if (event.persisted) refresh(); });
 })();

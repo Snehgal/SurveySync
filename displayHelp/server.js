@@ -139,6 +139,7 @@ try {
 
     console.log('Sorted lab numbers:', ongoingLabNumbers);
 
+    if (req.query.format === 'json') return res.json({ labs: ongoingLabNumbers });
     res.render('index', { labs: ongoingLabNumbers });
 
 } catch (error) {

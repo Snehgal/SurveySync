@@ -15,6 +15,7 @@ test('Real HTTP, firmware WebSocket, authenticated live stream, database and ana
         const lab = '/api/labs/ECE201-A-01';
         const post = (url, body, cookie = '') => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', cookie }, body: JSON.stringify(body) });
         assert.equal((await fetch(display + '/lab/ECE201-A-01/map', { redirect: 'manual' })).status, 302);
+        assert.equal((await fetch(display + '/?format=json', { redirect: 'manual' })).status, 302);
         assert.equal((await post(display + lab + '/mode', { mode: 'feedback' })).status, 401);
         assert.equal((await fetch(admin + '/seat-api/labs/ECE201-A-01/state')).status, 401);
         const adminLogin = await post(admin + '/login', { username: 'schedule-test', password: 'schedule-secret' });
@@ -24,6 +25,21 @@ test('Real HTTP, firmware WebSocket, authenticated live stream, database and ana
         const login = await post(display + '/login', { username: 'labadmin', password: 'seatmap-local' });
         const cookie = login.headers.get('set-cookie').split(';')[0];
         assert.match(cookie, /^ss_seatmap=/);
+        const ongoingLabs = async () => {
+            const response = await fetch(display + '/?format=json', { headers: { cookie } });
+            assert.equal(response.status, 200);
+            assert.match(response.headers.get('content-type'), /application\/json/);
+            return (await response.json()).labs;
+        };
+        assert.deepEqual(await ongoingLabs(), [
+            { labID: 'ECE201-A-01', labNumber: 'Lab 301' },
+            { labID: 'ECE201-B-01', labNumber: 'Lab 302' }
+        ]);
+        const otherSchedule = await fixture.db.collection('Schedule').findOne({ labID: 'ECE201-B-01' });
+        await fixture.db.collection('Schedule').deleteOne({ _id: otherSchedule._id });
+        assert.deepEqual(await ongoingLabs(), [{ labID: 'ECE201-A-01', labNumber: 'Lab 301' }]);
+        await fixture.db.collection('Schedule').insertOne(otherSchedule);
+        assert.equal((await ongoingLabs()).length, 2);
         assert.equal((await fetch(admin + '/get-records', { headers: { cookie } })).status, 401);
         for (const route of ['/', '/lab/ECE201-A-01', '/lab/ECE201-A-01/map']) {
             const page = await fetch(display + route, { headers: { cookie } }); assert.equal(page.status, 200);

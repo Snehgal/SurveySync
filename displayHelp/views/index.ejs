@@ -103,7 +103,7 @@
         <div class="page-heading"><h1>Ongoing labs</h1></div>
         <div class="lab-list">
         <% labs.forEach(lab => { %>
-            <a class="lab-link" href="/lab/<%= lab.labID %>/map">
+            <a class="lab-link" data-lab-id="<%= lab.labID %>" href="/lab/<%= lab.labID %>/map">
                 <div class="lab">
                     <div><h2><%= lab.labNumber %></h2></div>
                     <span class="expand-icon">&#x2192;</span>
@@ -120,11 +120,7 @@
         document.getElementById('sign-out').addEventListener('click', async () => {
             await fetch('/logout', { method: 'POST' }); location.replace('/login');
         });
-        window.addEventListener('pageshow', event => { if (event.persisted) location.reload(); });
-        // Refresh the page every 15 seconds
-        setTimeout(function() {
-            location.reload();
-        }, 5000); // 15000 milliseconds = 15 seconds
     </script>
+    <script src="/home.js"></script>
 </body>
 </html>
