@@ -1,14 +1,14 @@
-# Graphs — SurveySync Data Visualization Dashboard
+# Graphs - SurveySync Data Visualization Dashboard
 
 A web dashboard for visualizing feedback and help-request data collected by SurveySync. It connects to a MongoDB database, aggregates responses and help calls, and renders interactive charts with filtering and export capabilities.
 
 ## Features
 
-- **Interactive Charts** — View data as Bar, Pie, or Doughnut charts (powered by Chart.js)
-- **Dynamic Filters** — Filter by Room Number, Course Code, Batch, and Lab Number
-- **Live Updates** — Charts re-render automatically when any filter is changed
-- **Excel Export** — Download filtered records as an `.xlsx` file
-- **Dark Theme** — Clean dark UI with Montserrat typography
+- **Interactive Charts** - View data as Bar, Pie, or Doughnut charts (powered by Chart.js)
+- **Dynamic Filters** - Filter by Room Number, Course Code, Batch, and Lab Number
+- **Live Updates** - Charts re-render automatically when any filter is changed
+- **Excel Export** - Download filtered records as an `.xlsx` file
+- **Dark Theme** - Clean dark UI with Montserrat typography
 
 ## Tech Stack
 

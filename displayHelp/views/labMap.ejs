@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= labNumber %> — Seat Map | SurveySync</title>
+    <title><%= labNumber %> - Seat Map | SurveySync</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -382,47 +382,38 @@
             padding: 10px;
             text-align: center;
             width: 100%;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-        }
+            position: static;        }
     </style>
-    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/live.css">
 </head>
 
-<body>
+<body class="live-lab" data-lab-id="<%= labID %>" data-view="map">
     <header class="site-header map-header">
         <a class="back-link" href="/" aria-label="Back to ongoing labs">&#x2190;</a>
         <div class="brand"><img src="/ece-logo.png" alt="IIIT-Delhi ECE"><span></span><div><strong>SurveySync</strong></div></div>
-        <%= labNumber %> — Seat Map
+        <%= labNumber %> - Seat Map
         <a class="view-toggle" href="/lab/<%= labID %>">List view</a>
-    </header>
-
+    <button class="logout-button" data-logout type="button">Sign out</button></header>
+    <main class="lab-workspace"><div class="lab-content">
+    <%- include("live-controls") %>
     <div class="stats-bar">
         <div class="stat help-stat">&#x26A0; Active Helps: <%= activeHelps %></div>
         <div class="stat unresolved-stat">&#x2716; Unresolved: <%= unresolvedCount %></div>
     </div>
 
     <div class="room">
-        <div class="whiteboard">&#x1f4cb; Whiteboard</div>
+        <div class="whiteboard">Seat Map</div>
 
         <div class="seat-grid">
             <% seats.forEach(function(seat) { %>
                 <% let urgencyClass = ''; %>
                 <% if (seat.status === 'help' && seat.helpStarted) { %>
                     <% const elapsedMs = Date.now() - new Date(seat.helpStarted).getTime(); %>
-                    <% if (elapsedMs >= 20 * 60 * 1000) { %>
-                        <% urgencyClass = 'help-high'; %>
-                    <% } else if (elapsedMs >= 10 * 60 * 1000) { %>
-                        <% urgencyClass = 'help-medium'; %>
-                    <% } %>
+                    <% urgencyClass = urgency(elapsedMs); %>
                 <% } %>
-                <div class="seat <%= seat.status %> <%= urgencyClass %>"
+                <div data-table-id="<%= seat.tableID %>" class="seat <%= seat.status %> <%= urgencyClass %>"
                      style="grid-column: <%= seat.gridColumn %>; grid-row: <%= seat.gridRow %>;"
-                     <% if (seat.status === 'help') { %>
-                         onclick="openIssuePanel('<%= seat.tableID %>', '<%= seat.helpStarted %>')"
-                     <% } %>
-                     title="Table <%= seat.tableID %><% if (seat.status === 'help') { %> — Needs Help<% } else if (seat.status === 'unresolved') { %> — <%= seat.issue %><% } %>"
+                     title="Table <%= seat.tableID %><% if (seat.status === 'help') { %> - Needs Help<% } else if (seat.status === 'unresolved') { %> - <%= seat.issue %><% } %>"
                 >
                     <span class="seat-number"><%= String(seat.tableID || seat.displayID).slice(-2) %></span>
                     <% if (seat.status === 'unresolved' && seat.issue) { %>
@@ -440,13 +431,13 @@
                 <div class="legend-dot idle"></div> Idle
             </div>
             <div class="legend-item">
-                <div class="legend-dot help"></div> Help (0-10 min)
+                <div class="legend-dot help"></div> Help (&lt;7 min)
             </div>
             <div class="legend-item">
-                <div class="legend-dot help-medium"></div> Help (10-20 min)
+                <div class="legend-dot help-medium"></div> Help (7–15 min)
             </div>
             <div class="legend-item">
-                <div class="legend-dot help-high"></div> Help (20+ min)
+                <div class="legend-dot help-high"></div> Help (&gt;15 min)
             </div>
             <div class="legend-item">
                 <div class="legend-dot unresolved"></div> Unresolved Issue
@@ -454,102 +445,11 @@
         </div>
     </div>
 
-    <!-- Issue classification modal -->
-    <div class="overlay" id="overlay" onclick="closeIssuePanel()"></div>
-    <div class="issue-panel" id="issuePanel">
-        <h3>Log Issue for Table <span id="issuePanelTable"></span></h3>
-        <button class="issue-btn" onclick="logIssue('Faulty Trainer Kit')">Faulty Trainer Kit</button>
-        <button class="issue-btn" onclick="logIssue('Faulty Equipment')">Faulty Equipment</button>
-        <button class="issue-btn" onclick="logIssue('Wrong Instructions')">Wrong Instructions</button>
-        <button class="issue-btn" onclick="logIssue('Wifi Connectivity')">Wifi Connectivity</button>
-        <button class="issue-btn" onclick="logIssue('Others/Indeterminate')">Others/Indeterminate</button>
-        <div class="issue-cancel" onclick="closeIssuePanel()">Cancel</div>
-    </div>
+    </div><%- include("response-panel") %></main>
+    <%- include("issue-form") %>
 
     <footer><span>SurveySync</span><span>Department of Electronics &amp; Communications Engineering</span></footer>
 
-    <script>
-        let selectedTableID = null;
-        let selectedTime = null;
-
-        function openIssuePanel(tableID, helpStarted) {
-            selectedTableID = tableID;
-            selectedTime = helpStarted;
-            document.getElementById('issuePanelTable').textContent = tableID;
-            document.getElementById('issuePanel').classList.add('active');
-            document.getElementById('overlay').classList.add('active');
-        }
-
-        function closeIssuePanel() {
-            document.getElementById('issuePanel').classList.remove('active');
-            document.getElementById('overlay').classList.remove('active');
-            selectedTableID = null;
-            selectedTime = null;
-        }
-
-        function logIssue(issue) {
-            if (!selectedTableID) return;
-
-            fetch('/log-issue', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    tableID: selectedTableID,
-                    issue: issue,
-                    time: selectedTime
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    closeIssuePanel();
-                    location.reload();
-                } else {
-                    alert('Failed to log issue');
-                }
-            })
-            .catch(error => {
-                console.error('Error logging issue:', error);
-                alert('Error logging issue');
-            });
-        }
-
-        // Real-time updates via admin WebSocket + fallback polling
-        (function() {
-            var wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
-            var reloadTimer = null;
-
-            // Always reload after 30s for urgency color updates
-            var fallback = setTimeout(function() { location.reload(); }, 30000);
-
-            function scheduleReload() {
-                // Debounce: wait 200ms after last event before reloading
-                clearTimeout(reloadTimer);
-                reloadTimer = setTimeout(function() {
-                    clearTimeout(fallback);
-                    location.reload();
-                }, 200);
-            }
-
-            try {
-                var ws = new WebSocket(wsProto + '://' + location.hostname + ':4001');
-                ws.onmessage = function(event) {
-                    var msg = event.data;
-                    if (msg.indexOf('Help started') !== -1 ||
-                        msg.indexOf('Help ended') !== -1) {
-                        scheduleReload();
-                    }
-                };
-                ws.onerror = function() {
-                    clearTimeout(fallback);
-                    fallback = setTimeout(function() { location.reload(); }, 10000);
-                };
-            } catch(e) {
-                clearTimeout(fallback);
-                fallback = setTimeout(function() { location.reload(); }, 10000);
-            }
-        })();
-    </script>
+    <script src="/live.js" defer></script>
 </body>
-
 </html>

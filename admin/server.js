@@ -15,6 +15,10 @@
     const uri = process.env.MONGODB_URI;
     let client;
     let db;
+    let runtime;
+    const seatAuth = require('../shared/seat-auth');
+    const { LabRuntime } = require('../shared/lab-runtime');
+    const subscribers = new Map();
 
     const server = http.createServer(app);
     const wss = new WebSocket.Server({ server }); // Bind WebSocket to HTTP server
@@ -94,7 +98,7 @@
         res.json({ success: true });
     });
 
-    // Gate the admin dashboard itself — unauthenticated users go to /login.
+    // Gate the admin dashboard itself - unauthenticated users go to /login.
     // Served directly (not via static) with no-store so the browser's back/forward
     // cache can't restore it after logout.
     app.get(['/', '/index.html'], (req, res) => {
@@ -104,130 +108,6 @@
     });
 
     app.use(express.static(path.join(__dirname, 'public')));
-
-    async function getLabID(tableID) {
-        try {
-            // Extract room prefix from tableID (e.g., 3201 -> 32)
-            const roomPrefix = parseInt(tableID / 100, 10);
-            if (isNaN(roomPrefix)) {
-                throw new Error(`Invalid tableID: ${tableID}`);
-            }
-
-            // Find room that has this prefix in its tableID array
-            const table = await db.collection('Tables').findOne({ tableID: roomPrefix });
-            if (!table) {
-                throw new Error(`No lab found for table prefix: ${roomPrefix}`);
-            }
-
-            const labNo = table._id;
-            if (!labNo) {
-                throw new Error(`Invalid labNo retrieved for table prefix: ${roomPrefix}`);
-            }
-
-            const currentTime = new Date();
-
-            const schedule = await db.collection('Schedule').findOne({
-                labNo: labNo,
-                startTime: { $lte: toIST(currentTime) },
-                endTime: { $gte: toIST(currentTime) }
-            });
-
-            if (!schedule) {
-                throw new Error(`No active lab found for labNo: ${labNo}`);
-            }
-
-            return schedule.labID;
-
-        } catch (error) {
-            console.error("Error in getLabID:", error);
-            throw error;
-        }
-    }
-
-    async function logHelpStart(labID, tableID) {
-        const helpLoggingCollection = db.collection('Helps');
-        try {
-            // Close any existing open help for this table to prevent duplicates
-            await helpLoggingCollection.updateMany(
-                { tableID: tableID, helpEnded: { $exists: false } },
-                { $set: { helpEnded: toIST(new Date()) } }
-            );
-
-            const helpLoggingDoc = {
-                labID: labID,
-                tableID: tableID,
-                helpStarted: toIST(new Date())
-            };
-            await helpLoggingCollection.insertOne(helpLoggingDoc);
-            console.log('Inserted new document into Helps (help started)');
-            broadcastToClients('Help started for table ' + tableID);
-        } catch (error) {
-            console.error("Error inserting document into Helps", error);
-            broadcastToClients("Error inserting document into Helps" + error);
-        }
-    }
-
-    async function logHelpEnd(labID, tableID) {
-        const helpLoggingCollection = db.collection('Helps');
-        
-        try {
-            // Close ALL open help records for this table (handles duplicates)
-            const result = await helpLoggingCollection.updateMany(
-                { labID: labID, tableID: tableID, helpEnded: { $exists: false } },
-                { $set: { helpEnded: toIST(new Date()) } }
-            );
-            
-            if (result.modifiedCount > 0) {
-                console.log('Closed ' + result.modifiedCount + ' help record(s) for table ' + tableID);
-                broadcastToClients('Help ended for table ' + tableID);
-            } else {
-                // No active help found, ignore the end signal
-                console.log('No active help found for table ' + tableID + ', ignoring end signal');
-                broadcastToClients('No active help found for table ' + tableID + ', ignoring end signal');
-            }
-        } catch (error) {
-            console.error("Error ending help for table " + tableID, error);
-            broadcastToClients("Error ending help for table " + tableID + ": " + error);
-        }
-    }
-
-    async function logToResponses(labID, tableID, value) {
-        if(value != 0 && value!=1){
-            console.log('Value not defined',value);
-            broadcastToClients('Value ' +value+" not defined");
-            return;
-        }
-        const responseLoggingCollection = db.collection('Responses');
-        let nowDate=toIST(new Date());
-        const responseLoggingDoc = {
-            date: nowDate,
-            response: value === 1
-        };
-
-        try {
-            await responseLoggingCollection.updateOne(
-                { labID: labID, tableID: tableID },
-                { $set: responseLoggingDoc },
-                { upsert: true }
-            );
-            const responseLabel = value === 1 ? 'Yes' : 'No';
-            console.log('Logged "' + responseLabel + '" successfully for table ' + tableID);
-            broadcastToClients('Logged "' + responseLabel + '" successfully for table ' + tableID);
-        } catch (error) {
-            console.error("Error updating or inserting document into Responses", error);
-            broadcastToClients("Error updating or inserting document into Responses" + error);
-        }
-    }
-
-    async function emptyCollection(collectionName) {
-        try {
-            const collection = db.collection(collectionName);
-            const result = await collection.deleteMany({});
-            console.log(`Deleted ${result.deletedCount} documents from the ${collectionName} collection`);
-        } catch (error) {
-            console.error(`Error emptying the ${collectionName} collection`, error);
-        }
-    }
 
     function toIST(date) {
         // // Convert UTC date to IST (UTC+5:30)
@@ -263,7 +143,12 @@
 
             try {
                 await client.connect();
-                db = client.db("ResponseLogging");
+                db = client.db(process.env.MONGODB_DB || "ResponseLogging");
+                runtime = new LabRuntime(db, { onChange(snapshot) {
+                    for (const res of subscribers.get(snapshot.labID) || []) {
+                        res.write('data: ' + JSON.stringify(snapshot) + '\n\n');
+                    }
+                } });
                 console.log("Connected to MongoDB");
 
                 // Ensure indexes for faster lookups
@@ -281,9 +166,7 @@
     // WebSocket Setup
     const clients = new Set();
 
-    // Debounce rapid-fire help signals from ESP32 button bounce
-    const lastHelpEvent = new Map();
-    const HELP_DEBOUNCE_MS = 3000;
+    // Help starts are idempotent in the lab coordinator.
     /**
              * Broadcasts a message to all connected WebSocket clients.
              * @param {string} message - The message to send.
@@ -310,7 +193,7 @@
                 broadcastToClients('Received message:' + message.toString())
                 // Ensure message is a string
                 const messageStr = typeof message === 'string' ? message : message.toString();
-        
+
                 // Split message to extract tableID and value
                 const values = messageStr.split('\t');
                 if (values.length !== 2) {
@@ -318,47 +201,27 @@
                     broadcastToClients(`Error: Expected 2 values but received ${values.join(', ')}`);
                     return;
                 }
-        
-                const tableID = parseInt(values[0].trim(), 10);
-                const value = parseInt(values[1].trim(), 10);
-                
+
+                const tableID = /^\d+$/.test(values[0].trim()) ? Number(values[0]) : NaN;
+                const value = /^-?\d+$/.test(values[1].trim()) ? Number(values[1]) : NaN;
+
                 if (tableID === 1111 && value === -1) {
-                    console.log('ESP32 test signal received — device online');
+                    console.log('ESP32 test signal received - device online');
                     broadcastToClients('ESP32_CONNECTED');
                     return;
                 }
-                
+
                 if (isNaN(tableID) || isNaN(value)) {
                     console.error('One or more values could not be parsed as integers.');
                     broadcastToClients('Error: Invalid tableID or value received.');
                     return;
                 }
-        
-                const labID = await getLabID(tableID);
-        
-                if (value === 2 || value === 3) {
-                    // Debounce: ignore if same table sent same signal within 3s
-                    const debounceKey = tableID + ':' + value;
-                    const now = Date.now();
-                    const lastTime = lastHelpEvent.get(debounceKey) || 0;
-                    if (now - lastTime < HELP_DEBOUNCE_MS) {
-                        console.log('Debounced rapid signal ' + value + ' for table ' + tableID);
-                        return;
-                    }
-                    lastHelpEvent.set(debounceKey, now);
-                }
 
-                if (value === 2) {
-                    // Signal 2: Help starts
-                    await logHelpStart(labID, tableID);
-                } else if (value === 3) {
-                    // Signal 3: Help ends
-                    await logHelpEnd(labID, tableID);
-                } else {
-                    // Other signals: Log responses
-                    await logToResponses(labID, tableID, value);
-                }
-        
+                const result = await runtime.input(tableID, value);
+                if (result.ignored) ws.send(result.reason);
+                else if (value === 2) broadcastToClients('Help started for table ' + tableID);
+                else if (value === 3) broadcastToClients('Help ended for table ' + tableID);
+
             } catch (error) {
                 const errorMessage = `Error processing message: ${error.message || error}`;
                 console.error(errorMessage);
@@ -395,6 +258,44 @@
 
     console.log(`WebSocket server running at ws://${host}:${port}/`);
 
+    // The separate seat-map identity controls modes, issues and quiz totals.
+    app.use('/seat-api', seatAuth.requireAuth);
+    app.get('/seat-api/labs/:labID/events', async (req, res) => {
+        const labID = req.params.labID;
+        try {
+            res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', 'Connection': 'keep-alive', 'X-Accel-Buffering': 'no' });
+            res.flushHeaders();
+            if (!subscribers.has(labID)) subscribers.set(labID, new Set());
+            subscribers.get(labID).add(res);
+            const heartbeat = setInterval(() => {
+                if (!seatAuth.isAuthenticated(req)) return res.end();
+                res.write(': heartbeat\n\n');
+            }, 15000);
+            res.on('close', () => {
+                clearInterval(heartbeat);
+                subscribers.get(labID)?.delete(res);
+                if (!subscribers.get(labID)?.size) subscribers.delete(labID);
+            });
+            await runtime.serial(labID, async () => {
+                const data = await runtime.snapshotUnlocked(await runtime.schedule(labID));
+                res.write('data: ' + JSON.stringify(data) + '\n\n');
+            });
+        } catch (error) {
+            res.write('event: failure\ndata: ' + JSON.stringify({ message: error.message }) + '\n\n');
+            res.end();
+        }
+    });
+    function seatRoute(action) {
+        return async (req, res) => {
+            try { res.json(await action(req)); }
+            catch (error) { res.status(400).json({ success: false, message: error.message }); }
+        };
+    }
+    app.get('/seat-api/labs/:labID/state', seatRoute(req => runtime.snapshot(req.params.labID)));
+    app.post('/seat-api/labs/:labID/mode', seatRoute(req => runtime.setMode(req.params.labID, req.body.mode)));
+    app.post('/seat-api/labs/:labID/reset', seatRoute(req => runtime.reset(req.params.labID)));
+    app.post('/seat-api/labs/:labID/issue', seatRoute(req => runtime.issue(req.params.labID, req.body)));
+
     // Get schedule records with optional filter
     app.get('/get-records', requireAuth, async (req, res) => {
         try {
@@ -405,7 +306,7 @@
 
             if (filter === 'ongoing') {
                 // Labs where now is between startTime and endTime
-                query = { startTime: { $lte: now }, endTime: { $gte: now } };
+                query = { startTime: { $lte: now }, endTime: { $gt: now } };
             } else if (filter === 'past') {
                 // Labs that ended within the last 7 days
                 const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -531,12 +432,10 @@
     });
 
     // Start Server
-    server.listen(port, async () => {
-        await connectToMongoDB();
+    connectToMongoDB().then(() => {
+        server.listen(port, () => {
         console.log(`Server running at http://${host}:${port}/`);
-        // Uncomment if you want to empty collections
-        // await emptyCollection("Helps");
-        // await emptyCollection("Responses");
-        // await emptyCollection("UnresolvedHelps");
-    });
+        });
+        setInterval(() => runtime.tick(), 1000).unref();
+    }).catch(error => { console.error('Startup failed:', error.message); process.exitCode = 1; });
 

@@ -1,4 +1,4 @@
-# SurveySync — Admin Panel
+# SurveySync - Admin Panel
 
 Admin server and dashboard for the SurveySync classroom feedback and help-request collection system.
 
@@ -19,12 +19,12 @@ ESP8266 buttons ──(WSS)──► Node.js server ──► MongoDB (ResponseL
 ### 1. Real-Time Feedback Collection
 - ESP8266 devices send student responses over secure WebSocket (`wss://`)
 - Each device supports 4 button inputs per board
-- **Yes** (value `1`) / **No** (value `0`) — logged as survey responses
-- **Help Request** (value `2`) — toggles a help request on/off with timestamps
+- **Yes** (value `1`) / **No** (value `0`) - logged as survey responses
+- **Help Request** (value `2`) - toggles a help request on/off with timestamps
 
 ### 2. Schedule Management
 - Add lab sessions with course code, batch, lab number, room number, and time range
-- **Repeat Weekly** — optionally repeat a schedule weekly up to a given date, auto-incrementing the lab number each week
+- **Repeat Weekly** - optionally repeat a schedule weekly up to a given date, auto-incrementing the lab number each week
 - Duplicate `labID` detection prevents conflicting entries
 
 ### 3. Schedule Display (Tabbed View)
@@ -47,7 +47,7 @@ Four tabs filter the schedule records:
 - If no layout exists, see a clear **"NO LAYOUT ADDED"** indicator
 - Configure: total rows, seats per row, odd-row wall position, starting table ID
 - **Preview** the grid before saving
-- **Confirm & Save** upserts the `SeatLayouts` document — the displayHelp seat map picks it up immediately
+- **Confirm & Save** upserts the `SeatLayouts` document - the displayHelp seat map picks it up immediately
 
 ### 6. External Links
 - Links to Help-Tracking and Data Visualisation dashboards

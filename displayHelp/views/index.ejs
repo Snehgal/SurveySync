@@ -90,25 +90,22 @@
             border-top: 1px solid #0056b3;
             text-align: center;
             width: 100%;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-        }
+            position: static;        }
     </style>
-    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/live.css">
 </head>
 <body>
     <div class="container">
         <header class="site-header">
             <div class="brand"><img src="/ece-logo.png" alt="IIIT-Delhi ECE"><span></span><div><strong>SurveySync</strong></div></div>
-            <div class="header-label">Tracking</div>
+            <button class="logout-button" id="sign-out" type="button">Sign out</button>
         </header>
-        <div class="page-heading"><h1>Ongoing labs</h1><p>Select a laboratory to view its active assistance requests.</p></div>
+        <div class="page-heading"><h1>Ongoing labs</h1></div>
         <div class="lab-list">
         <% labs.forEach(lab => { %>
             <a class="lab-link" href="/lab/<%= lab.labID %>/map">
                 <div class="lab">
-                    <div><span class="lab-kicker">Active session</span><h2><%= lab.labNumber %></h2></div>
+                    <div><h2><%= lab.labNumber %></h2></div>
                     <span class="expand-icon">&#x2192;</span>
                 </div>
             </a>
@@ -120,6 +117,10 @@
         <span>SurveySync</span><span>Department of Electronics &amp; Communications Engineering</span>
     </footer>
     <script>
+        document.getElementById('sign-out').addEventListener('click', async () => {
+            await fetch('/logout', { method: 'POST' }); location.replace('/login');
+        });
+        window.addEventListener('pageshow', event => { if (event.persisted) location.reload(); });
         // Refresh the page every 15 seconds
         setTimeout(function() {
             location.reload();

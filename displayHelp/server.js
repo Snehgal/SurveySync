@@ -7,7 +7,8 @@ const app = express();
 const port = Number(process.env.DISPLAY_HELP_PORT) || 4000;
 
 const uri = process.env.MONGODB_URI;
-const dbName = 'ResponseLogging';
+const dbName = process.env.MONGODB_DB || 'ResponseLogging';
+const { fromStoredTime, urgency } = require('../shared/lab-runtime');
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -18,6 +19,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
+require('./access')(app);
 
 let db;
 
@@ -70,7 +72,7 @@ function computeGridLayout(totalRows, oddRowPosition) {
             groups.push([totalRows - 1]);
         }
     } else {
-        // Even number of rows — all paired
+        // Even number of rows - all paired
         for (let i = 0; i < totalRows; i += 2) {
             groups.push([i, i + 1]);
         }
@@ -108,7 +110,7 @@ try {
     // Get ongoing schedules
     const ongoingSchedules = await db.collection('Schedule').find({
         startTime: { $lte: currentTime },
-        endTime: { $gte: currentTime }
+        endTime: { $gt: currentTime }
     }).toArray();
 
     console.log('Ongoing schedules:', ongoingSchedules);
@@ -156,7 +158,7 @@ app.get('/lab/:labID', async (req, res) => {
         // Convert unresolvedHelps to IST
         const unresolvedHelpsInIST = unresolvedHelps.map(help => ({
             ...help,
-            issueRaised: toIST(new Date(help.issueRaised)) // Convert issueRaised to IST
+            issueRaised: new Date(fromStoredTime(help.issueRaised)) // Convert issueRaised to IST
         }));
 
         // Fetch active helps for the specific labID
@@ -168,7 +170,7 @@ app.get('/lab/:labID', async (req, res) => {
         // Convert helpStarted to IST for the specific lab
         const helpsInIST = helps.map(help => ({
             ...help,
-            helpStarted: new Date(help.helpStarted)
+            helpStarted: new Date(fromStoredTime(help.helpStarted))
         }));
 
         // Fetch the lab number
@@ -196,7 +198,7 @@ app.get('/lab/:labID/map', async (req, res) => {
         const layout = await db.collection('SeatLayouts').findOne({ _id: labNumber });
 
         if (!layout) {
-            // No layout configured — fall back to the list view
+            // No layout configured - fall back to the list view
             return res.redirect(`/lab/${labID}`);
         }
 
@@ -227,16 +229,10 @@ app.get('/lab/:labID/map', async (req, res) => {
             let status = 'idle';
             let helpData = null;
 
-            if (helpMap.has(tableID)) {
-                status = 'help';
-                helpData = helpMap.get(tableID);
-            } else if (unresolvedMap.has(tableID)) {
-                status = 'unresolved';
-                helpData = unresolvedMap.get(tableID);
-            }
+            if (unresolvedMap.has(tableID)) { status = 'unresolved'; helpData = unresolvedMap.get(tableID); } else if (helpMap.has(tableID)) { status = 'help'; helpData = helpMap.get(tableID); }
 
             const helpStarted = helpData?.helpStarted
-                ? new Date(helpData.helpStarted)
+                ? new Date(fromStoredTime(helpData.helpStarted))
                 : null;
 
             return {
@@ -252,6 +248,7 @@ app.get('/lab/:labID/map', async (req, res) => {
         }).sort((a, b) => a.gridRow - b.gridRow || a.gridColumn - b.gridColumn);
 
         res.render('labMap', {
+            urgency,
             labNumber,
             labID,
             seats: processedSeats,
@@ -268,76 +265,7 @@ app.get('/lab/:labID/map', async (req, res) => {
     }
 });
 
-async function getLabID(tableID) {
-    try {
-        const roomPrefix = parseInt(tableID / 100, 10);
-        if (isNaN(roomPrefix)) {
-            throw new Error(`Invalid tableID: ${tableID}`);
-        }
-
-        const table = await db.collection('Tables').findOne({ tableID: roomPrefix });
-        if (!table) {
-            throw new Error(`No lab found for tableID: ${tableID}`);
-        }
-
-        const labNo = table._id;
-        if (!labNo) {
-            throw new Error(`Invalid labNo retrieved for tableID: ${tableID}`);
-        }
-
-        const currentTime = toIST(new Date());
-        console.log("Current Time: ");
-        console.log(currentTime);
-
-        const schedule = await db.collection('Schedule').findOne({
-            labNo: labNo,
-            startTime: { $lte: (currentTime) },
-            endTime: { $gte: (currentTime) }
-        });
-
-        if (!schedule) {
-            throw new Error(`No active lab found for labNo: ${labNo}`);
-        }
-
-        return schedule.labID;
-
-    } catch (error) {
-        console.error("Error in getLabID:", error);
-        throw error;
-    }
-}
-
-app.post('/log-issue', async (req, res) => {
-    const { tableID, issue, time } = req.body;
-    try {
-        const labID = await getLabID(tableID); // Retrieve labID based on tableID
-        
-        // Prepare the new issue record
-        const newIssue = {
-            labID: labID,
-            tableID: parseInt(tableID),
-            issue,
-            issueRaised: new Date(time)
-        };
-        console.log("Inseting unresolved:",newIssue);
-        
-        // Insert the new issue into UnresolvedHelps
-        await db.collection('UnresolvedHelps').insertOne(newIssue);
-
-        // Delete the corresponding record from Helps
-        await db.collection('Helps').deleteOne({
-            tableID: parseInt(tableID),
-            helpEnded: { $exists: false }
-        });
-
-        res.json({ success: true });
-    } catch (error) {
-        console.error("Error logging issue:", error);
-        res.json({ success: false });
-    }
-});
-
-
+// Issue writes use the authenticated /api/labs/:labID/issue coordinator.
 
 // Connect to MongoDB and start the server
 connectToMongoDB().then(() => {
@@ -349,5 +277,5 @@ connectToMongoDB().then(() => {
 });
 
 // to run
-// cd D:\Chirag\VSCode\GITI\Method3_MongoDBmethod\displayHelp       
+// cd D:\Chirag\VSCode\GITI\Method3_MongoDBmethod\displayHelp
 // node server.js

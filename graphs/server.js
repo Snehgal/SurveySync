@@ -7,7 +7,7 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const uri = process.env.MONGODB_URI; // Use environment variable for URI
 const host = process.env.HOST || 'localhost';
 const port = Number(process.env.GRAPHS_PORT) || 3010;
-const dbName = 'ResponseLogging';
+const dbName = process.env.MONGODB_DB || 'ResponseLogging';
 let db;
 
 app.set('view engine', 'ejs');
@@ -165,7 +165,8 @@ app.get('/download-data', async (req, res) => {
                 Lab: docLab,
                 Response: responseValue,
                 HelpEnded: doc.helpEnded || null,
-                UnresolvedReason: dbName === 'UnresolvedHelps' ? (doc.issue || '') : ''
+                UnresolvedReason: dbName === 'UnresolvedHelps' ? (doc.issue || '') : '',
+                Remarks: dbName === 'UnresolvedHelps' ? (doc.remarks || '') : ''
             };
         }
 

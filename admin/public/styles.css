@@ -19,6 +19,9 @@ html { scroll-behavior: smooth; }
 
 body {
     margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     color: var(--ink);
     background:
         radial-gradient(circle at 92% 4%, rgba(57, 170, 169, .10), transparent 24rem),
@@ -55,7 +58,6 @@ button, input, select { font: inherit; }
 .logout-btn { min-height: 36px; padding: 0 16px; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 9px; font-size: 12px; }
 .logout-btn:hover { color: var(--ink); background: var(--canvas); box-shadow: none; transform: none; }
 .header-context { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 12px; font-weight: 600; }
-.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 4px rgba(59, 141, 104, .12); }
 
 nav {
     position: fixed;
@@ -194,6 +196,8 @@ input:focus, select:focus { background: #fff; border-color: var(--teal); outline
 
 footer {
     width: 100%;
+    margin-top: auto;
+    flex-shrink: 0;
     min-height: 56px;
     padding: 0 clamp(20px, 4vw, 64px);
     display: flex;

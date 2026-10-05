@@ -1,5 +1,8 @@
 # SurveySync: Working Model
 
+For the current Quiz/Feedback seat map, separate operator login, localhost setup,
+corrected ESP32 sketch, and verification commands, see [IMPLEMENTATION_NOTES.md](IMPLEMENTATION_NOTES.md).
+
 SurveySync is a tool designed to synchronize survey data efficiently. This repository focuses on **Method 3**, which utilizes MongoDB for data synchronization.
 
 ## Table of Contents
@@ -47,7 +50,7 @@ To torubleshoot, it is important to know what the ESP light means:
 - `Three Blinks` : Connected to Website/Websocket
 - `10 Slow Blinks` : Websocket disconnected, will try connecting back to the Website after light stops blinking
 - `Static Blue Light`: Couldn't connect to last saved WiFi, please connect to `ESP8266 - Control` and enter WiFi credentials
-  
+
 To troubleshoot, the following scenarios are possible. In each scenario, a problem is indicated by 10 slow blinks.
 ### Static blue light starts slow blinking after saving credentials, or doesn't blink for a long time
 Usually means that the WiFi credentials provided did not work, and it's trying to reconnect again and again. After some time, the static light will reappaer

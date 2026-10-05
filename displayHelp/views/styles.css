@@ -95,7 +95,4 @@ footer {
     border-top: 1px solid #0056b3;
     text-align: center;
     width: 100%;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-}
+    position: static;}

@@ -30,7 +30,7 @@
         <button id="help-btn">Help tracking</button>
         <button id="dshbrd">Analytics</button>
     </nav>
-    
+
     <div id="containerS" class="section">
         <!-- Schedule Form -->
         <div class="section-heading">
@@ -121,7 +121,7 @@
                     <div>
                         <label for="layoutRoom">Lab (Room):</label>
                         <select id="layoutRoom">
-                            <option value="">— Select Room —</option>
+                            <option value="">- Select Room -</option>
                         </select>
                     </div>
                 </div>
@@ -178,13 +178,11 @@
                     </div>
                     <div id="data-container"></div>
                 </div>
-                <div id="controls">
-                    <div id="status"></div>
-                    <div id="button-container">
+                <div id="controls">                    <div id="button-container">
                         <button id="connect-btn">Connect</button>
                         <button id="disconnect-btn" disabled>Disconnect</button>
                     </div>
-                    
+
                 </div>
             </div>
         </div>
@@ -197,8 +195,6 @@
             const dataContainer = document.getElementById('data-container');
             const connectBtn = document.getElementById('connect-btn');
             const disconnectBtn = document.getElementById('disconnect-btn');
-            const status = document.getElementById('status');
-
             function getActivityClass(message) {
                 const normalized = String(message || '').toLowerCase();
 
@@ -218,9 +214,7 @@
             }
 
             connectBtn.onclick = function () {
-                if (!ws || ws.readyState === WebSocket.CLOSED) {
-                    status.textContent = 'Connecting...';
-                    connectBtn.disabled = true;
+                if (!ws || ws.readyState === WebSocket.CLOSED) {                    connectBtn.disabled = true;
                     disconnectBtn.disabled = true;
 
                     // ws = new WebSocket('ws://localhost:8080');
@@ -228,9 +222,7 @@
                     const wsUrl = `${wsProtocol}://${location.host}`;
                     ws = new WebSocket(wsUrl);
 
-                    ws.onopen = function () {
-                        status.textContent = 'Connected';
-                        connectBtn.disabled = true;
+                    ws.onopen = function () {                        connectBtn.disabled = true;
                         disconnectBtn.disabled = false;
                     };
 
@@ -242,30 +234,20 @@
                         dataContainer.appendChild(dataEntry);
                     };
 
-                    ws.onclose = function () {
-                        status.textContent = 'Disconnected';
-                        connectBtn.disabled = false;
+                    ws.onclose = function () {                        connectBtn.disabled = false;
                         disconnectBtn.disabled = true;
                     };
 
-                    ws.onerror = function (error) {
-                        status.textContent = 'Error';
-                        console.error('WebSocket error:', error);
+                    ws.onerror = function (error) {                        console.error('WebSocket error:', error);
                     };
-                } else {
-                    status.textContent = 'WebSocket is already connected';
                 }
             };
 
             disconnectBtn.onclick = function () {
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    status.textContent = 'Disconnecting...';
-                    connectBtn.disabled = true;
+                if (ws && ws.readyState === WebSocket.OPEN) {                    connectBtn.disabled = true;
                     disconnectBtn.disabled = true;
 
                     ws.close();
-                } else {
-                    status.textContent = 'WebSocket is not connected';
                 }
             };
 

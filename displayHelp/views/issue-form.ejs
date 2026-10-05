@@ -1,0 +1,11 @@
+<div class="overlay" id="overlay"></div>
+<section class="issue-panel" id="issuePanel" role="dialog" aria-modal="true" aria-labelledby="issue-heading" tabindex="-1">
+    <h3 id="issue-heading">Log issue · Table <span id="issuePanelTable"></span></h3>
+    <form id="issue-form"><fieldset><legend>What needs attention?</legend>
+        <label class="issue-choice"><input type="radio" name="issue" value="Faulty Equipment" required><span>Faulty Equipment</span></label>
+        <label class="issue-choice"><input type="radio" name="issue" value="Others" required><span>Others</span></label>
+    </fieldset><label class="remarks-label" for="issue-remarks">Remarks <span id="remarks-requirement">optional for Faulty Equipment</span></label>
+    <textarea id="issue-remarks" rows="4" maxlength="1000" placeholder="Add details for the lab team…"></textarea>
+    <p class="issue-hint">Submitting marks this table unresolved and freezes its inputs until this lab session ends.</p>
+    <p id="issue-error" role="alert"></p><div class="issue-actions"><button type="button" id="cancel-issue">Cancel</button><button type="submit" class="primary-button">Mark unresolved</button></div></form>
+</section>

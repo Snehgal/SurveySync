@@ -1,0 +1,18 @@
+<aside class="response-sidebar" aria-label="Room responses">
+    <div class="mode-actions">
+        <div class="mode-switch" role="group" aria-label="Response mode">
+            <span class="mode-highlight" aria-hidden="true"></span>
+            <button type="button" id="quiz-mode" aria-pressed="true" disabled>Quiz</button>
+            <button type="button" id="feedback-mode" aria-pressed="false" disabled>Feedback <span>5 min</span></button>
+        </div>
+        <div class="session-status"><span id="feedback-timer" role="timer" hidden></span></div>
+    </div>
+    <section class="response-panel" aria-label="Response graphs">
+    <div class="response-heading"><h2>Room responses</h2></div>
+    <div class="response-total"><strong id="response-total">0</strong><span>tables responded</span></div>
+    <div class="vote-row"><div><span><i class="yes-key"></i> Yes</span><strong id="yes-count">0</strong></div><div class="vote-track"><div id="yes-bar"></div></div></div>
+    <div class="vote-row no-row"><div><span><i class="no-key"></i> No</span><strong id="no-count">0</strong></div><div class="vote-track"><div id="no-bar"></div></div></div>
+    <div class="donut-wrap"><svg class="vote-donut" viewBox="0 0 120 120" role="img" aria-label="Response proportions"><circle class="donut-track" cx="60" cy="60" r="48"/><circle id="donut-no" cx="60" cy="60" r="48"/><circle id="donut-yes" cx="60" cy="60" r="48"/></svg><div class="donut-label"><strong id="yes-percentage">-</strong><span>Yes</span></div></div>
+    <button class="reset-button" id="reset-quiz" type="button" disabled>↻ Reset quiz</button>
+    </section>
+</aside>

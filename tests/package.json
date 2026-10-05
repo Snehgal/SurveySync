@@ -1,0 +1,6 @@
+{
+  "name": "surveysync-verification",
+  "private": true,
+  "scripts": { "test": "node --test runtime.test.js integration.test.js", "preview": "node preview.js" },
+  "devDependencies": { "mongodb-memory-server": "^10.4.1" }
+}

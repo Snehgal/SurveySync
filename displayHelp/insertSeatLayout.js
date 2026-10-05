@@ -100,7 +100,7 @@ Example:
         console.log(`Odd row on:      ${oddRowPosition} wall`);
     }
 
-    // Print a visual grid (rows as columns, seats as rows — matches the map orientation)
+    // Print a visual grid (rows as columns, seats as rows - matches the map orientation)
     console.log('\nGrid layout (whiteboard at top):\n');
 
     // Build group structure for display

@@ -127,7 +127,7 @@ document.getElementById('scheduleForm').addEventListener('submit', function (eve
     const endTimeElem = document.getElementById('endTime');
     const repeatWeeklyElem = document.getElementById('repeatWeekly');
     const repeatUntilElem = document.getElementById('repeatUntil');
-    
+
     if (!courseCodeElem || !batchElem || !labNumberElem || !labNoElem || !startTimeElem || !endTimeElem) {
         console.error('One or more form elements are missing.');
         return;
@@ -383,7 +383,7 @@ function buildGridPreviewHTML(totalRows, seatsPerRow, oddRowPosition, startTable
     html += '<div class="layout-room-preview">';
 
     // Whiteboard
-    html += '<div class="preview-whiteboard">WHITEBOARD</div>';
+    html += '<div class="preview-whiteboard">Seat Map</div>';
 
     // Grid
     html += '<div class="preview-grid" style="grid-template-columns: ' + gridTemplate + ';">';

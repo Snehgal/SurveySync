@@ -206,10 +206,7 @@
             border-top: 1px solid #0056b3;
             text-align: center;
             width: 100%;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-        }
+            position: static;        }
 
         .notification {
             display:block;
@@ -245,151 +242,25 @@
             display: none;
         }
     </style>
-    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/live.css">
 </head>
 
-<body>
+<body class="live-lab" data-lab-id="<%= labID %>" data-view="list">
     <header class="site-header">
         <a class="back-link" href="/" aria-label="Back to ongoing labs">&#x2190;</a>
         <div class="brand"><img src="/ece-logo.png" alt="IIIT-Delhi ECE"><span></span><div><strong>SurveySync</strong></div></div>
+        <span><%= labNumber %></span>
         <a class="view-toggle" href="/lab/<%= labID %>/map">Map view</a>
-    </header>
-    <div id="notification" class="notification hidden"></div>
-    <div class="container detail-container">
-        <div class="page-heading"><h1><%= labNumber %></h1><p>Review and classify requests from this laboratory.</p></div>
-        <div class="scrollable-container">
-            <div class="total-records"><span>Active helps</span><strong><%= helps.length %></strong>
-            </div>
-            <% helps.forEach(help=> { %>
-                <div class="chip" data-tooltip="Click to log an issue"
-                    onclick="toggleDropdown(event, '<%= help.tableID %>')">
-                    Table <strong>
-                        <%= help.tableID %>
-                    </strong> | <%= help.helpStarted.toLocaleTimeString() %>
-                        <div class="dropdown" id="dropdown-<%= help.tableID %>">
-                            <div class="dropdown-item"
-                                onclick="logIssue('<%= help.tableID %>', 'Faulty Trainer Kit', '<%= help.helpStarted %>')">
-                                Faulty Trainer Kit</div>
-                            <div class="dropdown-item"
-                                onclick="logIssue('<%= help.tableID %>', 'Faulty Equipment', '<%= help.helpStarted %>')">
-                                Faulty Equipment</div>
-                            <div class="dropdown-item"
-                                onclick="logIssue('<%= help.tableID %>', 'Wrong Instructions', '<%= help.helpStarted %>')">
-                                Wrong Instructions</div>
-                            <div class="dropdown-item"
-                                onclick="logIssue('<%= help.tableID %>', 'Wifi Connectivity', '<%= help.helpStarted %>')">
-                                Wifi Connectivity</div>
-                            <div class="dropdown-item"
-                                onclick="logIssue('<%= help.tableID %>', 'Others/Indeterminate', '<%= help.helpStarted%>')">
-                                Others/Indeterminate</div>
-                        </div>
-                </div>
-                <% }) %>
-        </div>
-        <div class="scrollable-container">
-            <div class="total-records"><span>Unresolved helps</span><strong><%= UnresolvedHelps.length %></strong>
-            </div>
-            <% UnresolvedHelps.forEach(UnresolvedHelp=> { %>
-                <span class="chip unresolved-chip" data-tooltip="Under Inspection">
-                    Table <strong>
-                        <%= UnresolvedHelp.tableID %>
-                    </strong> | <%= UnresolvedHelp.issue %>
-                </span>
-                <% }); %>
-        </div>
-    </div>
+    <button class="logout-button" data-logout type="button">Sign out</button></header>
+<main class="lab-workspace list-workspace"><div class="lab-content">
+    <%- include("live-controls") %>
+    <div class="list-panels">
+        <section class="scrollable-container"><h2>Active helps <span id="list-help-count">0</span></h2><div id="list-helps"></div></section>
+        <section class="scrollable-container"><h2>Unresolved <span id="list-unresolved-count">0</span></h2><div id="list-unresolved"></div></section>
+    </div></div><%- include("response-panel") %></main><%- include("issue-form") %>
     <footer>
         <span>SurveySync</span><span>Department of Electronics &amp; Communications Engineering</span>
     </footer>
-    <script>
-        // Real-time updates via admin WebSocket + fallback polling
-        (function() {
-            var wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
-            var reloadTimer = null;
-
-            // Fallback reload every 30s
-            var fallback = setTimeout(function() { location.reload(); }, 30000);
-
-            function scheduleReload() {
-                // Debounce: wait 200ms after last event before reloading
-                clearTimeout(reloadTimer);
-                reloadTimer = setTimeout(function() {
-                    clearTimeout(fallback);
-                    location.reload();
-                }, 200);
-            }
-
-            try {
-                var ws = new WebSocket(wsProto + '://' + location.hostname + ':4001');
-                ws.onmessage = function(event) {
-                    var msg = event.data;
-                    if (msg.indexOf('Help started') !== -1 ||
-                        msg.indexOf('Help ended') !== -1) {
-                        scheduleReload();
-                    }
-                };
-                ws.onerror = function() {
-                    clearTimeout(fallback);
-                    fallback = setTimeout(function() { location.reload(); }, 10000);
-                };
-            } catch(e) {
-                clearTimeout(fallback);
-                fallback = setTimeout(function() { location.reload(); }, 10000);
-            }
-        })();
-    </script>
-    <script>
-
-        function toggleDropdown(event, tableID) {
-            event.stopPropagation(); // Prevent click event from propagating to document
-            const dropdown = document.getElementById('dropdown-' + tableID);
-            // Close any other open dropdowns
-            document.querySelectorAll('.dropdown').forEach(d => {
-                if (d !== dropdown) {
-                    d.classList.remove('active');
-                }
-            });
-            // Toggle the clicked dropdown
-            dropdown.classList.toggle('active');
-        }
-
-        function logIssue(tableID, issue, time) {
-            console.log("Received to log unresolved: ",tableID,issue,time);
-            fetch('/log-issue', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ tableID, issue, time })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // showNotification('Issue logged successfully');
-                        location.reload();
-                    } else {
-                        alert('Failed to log issue');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error logging issue:', error);
-                    alert('Error logging issue');
-                });
-        }
-
-
-
-
-        // Close dropdown if clicked outside
-        document.addEventListener('click', function (event) {
-            const dropdowns = document.querySelectorAll('.dropdown');
-            dropdowns.forEach(dropdown => {
-                if (!dropdown.contains(event.target)) {
-                    dropdown.classList.remove('active');
-                }
-            });
-        });
-    </script>
+    <script src="/live.js" defer></script>
 </body>
-
 </html>

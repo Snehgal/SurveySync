@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="./styles.css">
     <style>
         .auth-wrap {
-            min-height: 100vh;
+            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -102,7 +102,6 @@
         .auth-link strong { font-size: 13px; }
         .auth-link span { color: var(--muted); font-size: 11px; }
 
-        .auth-foot { color: var(--muted); font-size: 11px; text-align: center; }
 
         @media (max-width: 520px) {
             .auth-links { flex-direction: column; }
@@ -145,8 +144,8 @@
             </a>
         </div>
 
-        <p class="auth-foot">Department of Electronics &amp; Communications Engineering · IIIT-Delhi</p>
     </div>
+    <footer><span>SurveySync</span><span>Department of Electronics &amp; Communications Engineering</span></footer>
 
     <script>
         // Build links to the sibling apps on the same host

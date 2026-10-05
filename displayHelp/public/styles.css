@@ -1,6 +1,6 @@
 :root { --ink:#182226; --muted:#68767a; --teal:#39aaa9; --teal-dark:#237f80; --soft:#e8f6f5; --canvas:#f5f7f7; --surface:#fff; --line:#dfe6e6; --warning:#d79c42; --danger:#c65a5a; --info:#657d91; }
 * { box-sizing:border-box; }
-body { margin:0!important; padding:0!important; min-height:100vh; color:var(--ink); background:radial-gradient(circle at 92% 2%,rgba(57,170,169,.11),transparent 25rem),var(--canvas)!important; font-family:'Montserrat',system-ui,sans-serif!important; }
+body { margin:0!important; padding:0!important; min-height:100vh; display:flex; flex-direction:column; align-items:stretch; color:var(--ink); background:radial-gradient(circle at 92% 2%,rgba(57,170,169,.11),transparent 25rem),var(--canvas)!important; font-family:'Montserrat',system-ui,sans-serif!important; }
 .site-header { position:fixed!important; inset:0 0 auto 0!important; z-index:1000; width:100%!important; height:72px; padding:0 clamp(20px,4vw,64px)!important; display:flex!important; align-items:center; justify-content:space-between!important; color:var(--ink)!important; background:rgba(255,255,255,.95)!important; border:0!important; border-bottom:1px solid var(--line)!important; backdrop-filter:blur(16px); font-size:inherit!important; text-align:left!important; }
 .brand { display:flex; align-items:center; gap:14px; }
 .brand img { width:70px; height:48px; object-fit:contain; }
@@ -37,8 +37,9 @@ body { margin:0!important; padding:0!important; min-height:100vh; color:var(--in
 .dropdown-item { padding:10px!important; border-radius:7px; font-size:11px; }
 .dropdown-item:hover { color:var(--ink)!important; background:var(--soft)!important; }
 .notification { top:84px!important; border-radius:9px!important; }
-footer { position:fixed!important; inset:auto 0 0 0!important; z-index:900; width:100%!important; min-height:56px; padding:0 clamp(20px,4vw,64px)!important; display:flex; align-items:center; justify-content:space-between; color:var(--muted)!important; background:#fff!important; border:0!important; border-top:1px solid var(--line)!important; font-size:10px!important; }
+footer { position:static!important; inset:auto!important; margin-top:auto; flex-shrink:0; width:100%!important; min-height:56px; padding:16px clamp(20px,4vw,64px)!important; display:flex; align-items:center; justify-content:space-between; gap:20px; color:var(--muted)!important; background:#fff!important; border:0!important; border-top:1px solid var(--line)!important; font-size:10px!important; }
 footer span:first-child { color:var(--ink); font-weight:700; }
+@media(max-width:650px){footer{flex-direction:column;align-items:flex-start;gap:8px!important}}
 
 /* Seat map */
 .map-header { justify-content:flex-start!important; gap:16px; }
