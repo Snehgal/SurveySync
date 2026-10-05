@@ -1,8 +1,5 @@
 # SurveySync: Working Model
 
-For the current Quiz/Feedback seat map, separate operator login, localhost setup,
-corrected ESP32 sketch, and verification commands, see [IMPLEMENTATION_NOTES.md](IMPLEMENTATION_NOTES.md).
-
 SurveySync is a tool designed to synchronize survey data efficiently. This repository focuses on **Method 3**, which utilizes MongoDB for data synchronization.
 
 ## Table of Contents
