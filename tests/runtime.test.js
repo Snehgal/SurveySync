@@ -17,6 +17,57 @@ test('Quiz defaults to per-lab latest vote, with no database writes', async () =
     assert.equal(await fixture.db.collection('Responses').countDocuments(), 0);
     assert.equal(await fixture.db.collection('LabModes').countDocuments(), 0);
 });
+
+test('Help ranks are oldest first, stable for duplicate presses and compact after completion or freeze', async () => {
+    await runtime.input(3417, 2); now += 1000;
+    await runtime.input(3416, 2);
+    let snapshot = await runtime.snapshot(A);
+    const first = snapshot.helps[0];
+    assert.deepEqual(snapshot.helps.map(h => [h.tableID, h.rank]), [[3417, 1], [3416, 2]]);
+    now += 1000; await runtime.input(3417, 2);
+    assert.deepEqual((await runtime.snapshot(A)).helps[0], first);
+    await runtime.input(3417, 3);
+    assert.deepEqual((await runtime.snapshot(A)).helps.map(h => [h.tableID, h.rank]), [[3416, 1]]);
+    now += 1000; await runtime.input(3417, 2);
+    snapshot = await runtime.snapshot(A);
+    assert.notEqual(snapshot.helps[1].requestID, first.requestID);
+    assert.deepEqual(snapshot.helps.map(h => [h.tableID, h.rank]), [[3416, 1], [3417, 2]]);
+    await runtime.issue(A, { tableID: 3416, issue: 'Faulty Equipment' });
+    assert.deepEqual((await runtime.snapshot(A)).helps.map(h => [h.tableID, h.rank]), [[3417, 1]]);
+    assert.equal((await runtime.snapshot(B)).helps.length, 0);
+});
+
+test('Help rank ties use table ID and legacy duplicate requests never occupy two queue positions', async () => {
+    await runtime.input(3417, 2); await runtime.input(3416, 2);
+    await fixture.db.collection('Helps').insertOne({ labID: A, tableID: 3417, helpStarted: toStoredTime(now + 10) });
+    assert.deepEqual((await runtime.snapshot(A)).helps.map(h => [h.tableID, h.rank]), [[3416, 1], [3417, 2]]);
+});
+
+test('Private response details show only latest per-table votes, stay lab scoped, and add no snapshot queries', async () => {
+    await runtime.input(3416, 1); await runtime.input(3416, 1); await runtime.input(3417, 0);
+    await runtime.input(3516, 1);
+    assert.equal('responseDetails' in await runtime.snapshot(A), false);
+    let snapshot = await runtime.snapshot(A, true);
+    assert.deepEqual(snapshot.responseDetails, { quiz: { yes: [3416], no: [3417] }, feedback: { yes: [], no: [] } });
+    await runtime.input(3416, 0);
+    assert.deepEqual((await runtime.snapshot(A, true)).responseDetails.quiz, { yes: [], no: [3416, 3417] });
+    assert.equal(await fixture.db.collection('Responses').countDocuments(), 0);
+    assert.equal('responseDetails' in await runtime.setMode(A, 'feedback'), false);
+    await runtime.input(3416, 1); await runtime.input(3416, 0); await runtime.input(3416, 0);
+    assert.deepEqual((await runtime.snapshot(A, true)).responseDetails.feedback, { yes: [], no: [3416] });
+    assert.equal(await fixture.db.collection('Responses').countDocuments(), 1);
+    const reads = [];
+    const db = { collection(name) { reads.push(name); return fixture.db.collection(name); } };
+    const measuring = new LabRuntime(db, { now: () => now });
+    await measuring.snapshot(A); reads.length = 0;
+    await measuring.snapshot(A); const normal = [...reads]; reads.length = 0;
+    await measuring.snapshot(A, true); assert.deepEqual(reads, normal);
+    await runtime.setMode(A, 'quiz'); await runtime.reset(A);
+    snapshot = await runtime.snapshot(A, true);
+    assert.deepEqual(snapshot.responseDetails.quiz, { yes: [], no: [] });
+    assert.deepEqual(snapshot.responseDetails.feedback, { yes: [], no: [3416] });
+    assert.deepEqual((await runtime.snapshot(B, true)).responseDetails.quiz, { yes: [3516], no: [] });
+});
 test('Feedback changes the same row, keeping only the latest per table across windows', async () => {
     await runtime.setMode(A, 'feedback');
     await runtime.input(3416, 0); await runtime.input(3416, 0); await runtime.input(3416, 1);

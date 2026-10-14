@@ -3,7 +3,10 @@
 .live-lab{--mode-accent:#237f80;--mode-soft:#e8f6f5;transition:background-color .35s ease}
 .live-lab.feedback-mode{--mode-accent:#6552a0;--mode-soft:#f0ecfa;background:radial-gradient(circle at 92% 2%,#e5ddf4,transparent 30rem),#f6f5f8!important}
 .logout-button{border:1px solid var(--line);border-radius:8px;padding:9px 12px;background:#fff;color:var(--muted);font:600 11px inherit;cursor:pointer;white-space:nowrap}
-.session-toolbar{margin:0;display:flex;align-items:center;min-height:52px}
+.session-toolbar{margin:0;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;min-height:52px}
+.sound-button{border:1px solid var(--line);border-radius:8px;padding:9px 12px;background:#fff;color:var(--muted);font:600 11px 'Montserrat',system-ui,sans-serif;cursor:pointer}
+.sound-button[aria-pressed=true]{color:var(--teal-dark);border-color:var(--teal-dark);background:var(--soft)}
+.seat.help .seat-sub{font-size:11px;font-weight:600;letter-spacing:0}
 .session-toolbar h1{font-size:32px;letter-spacing:-.045em;margin:0;line-height:1.25}
 .mode-actions{display:grid;gap:10px}
 .mode-switch{position:relative;isolation:isolate;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));background:#fff;border:1px solid var(--line);padding:5px;border-radius:13px;box-shadow:0 4px 20px #18222605}

@@ -10,6 +10,24 @@ function counts(votes) {
     const yes = values.filter(v => v === 1).length;
     return { yes, no: values.length - yes, total: values.length };
 }
+function responseTables(votes) {
+    return {
+        yes: [...votes].filter(([, value]) => value === 1).map(([id]) => id).sort((a, b) => a - b),
+        no: [...votes].filter(([, value]) => value === 0).map(([id]) => id).sort((a, b) => a - b)
+    };
+}
+function rankedHelps(helps, frozen) {
+    const ordered = helps.filter(help => !frozen.has(help.tableID))
+        .sort((a, b) => new Date(a.helpStarted) - new Date(b.helpStarted) || a.tableID - b.tableID || String(a._id).localeCompare(String(b._id)));
+    const seen = new Set();
+    return ordered.filter(help => {
+        if (seen.has(help.tableID)) return false;
+        seen.add(help.tableID); return true;
+    }).map((help, index) => ({
+        requestID: String(help._id), tableID: help.tableID,
+        startedAt: fromStoredTime(help.helpStarted), rank: index + 1
+    }));
+}
 
 // One coordinator in the admin process owns all device and browser mutations.
 // Quiz votes never leave this in-memory map. Only feedback and mode metadata persist.
@@ -77,7 +95,7 @@ class LabRuntime {
             feedbackEndsAt: state.feedbackEndsAt ? new Date(state.feedbackEndsAt) : null
         } }, { upsert: true });
     }
-    async snapshotUnlocked(lab) {
+    async snapshotUnlocked(lab, includeResponses = false) {
         const state = await this.state(lab);
         const [helps, unresolved, responses] = await Promise.all([
             this.db.collection('Helps').find({ labID: lab.labID, helpEnded: { $exists: false } }).toArray(),
@@ -86,19 +104,22 @@ class LabRuntime {
         ]);
         const feedback = new Map(responses.sort((a, b) => new Date(a.date) - new Date(b.date)).map(r => [r.tableID, r.response ? 1 : 0]));
         const frozen = new Set(unresolved.map(h => h.tableID));
-        return {
+        const snapshot = {
             labID: lab.labID, labNo: lab.labNo, active: this.active(lab), mode: state.mode,
             serverNow: this.now(), sessionEndsAt: fromStoredTime(lab.endTime), feedbackEndsAt: state.feedbackEndsAt,
             quiz: counts(state.votes), feedback: counts(feedback),
-            helps: helps.filter(h => !frozen.has(h.tableID)).map(h => ({ tableID: h.tableID, startedAt: fromStoredTime(h.helpStarted) })),
+            helps: rankedHelps(helps, frozen),
             unresolved: unresolved.map(h => ({ tableID: h.tableID, issue: h.issue, remarks: h.remarks || '' }))
         };
-    }
-    snapshot(labID) { return this.serial(labID, async () => this.snapshotUnlocked(await this.schedule(labID))); }
-    async publish(lab) {
-        const snapshot = await this.snapshotUnlocked(lab);
-        this.onChange(snapshot);
+        if (includeResponses) snapshot.responseDetails = { quiz: responseTables(state.votes), feedback: responseTables(feedback) };
         return snapshot;
+    }
+    snapshot(labID, includeResponses = false) { return this.serial(labID, async () => this.snapshotUnlocked(await this.schedule(labID), includeResponses)); }
+    async publish(lab) {
+        const snapshot = await this.snapshotUnlocked(lab, true);
+        this.onChange(snapshot);
+        const { responseDetails, ...publicSnapshot } = snapshot;
+        return publicSnapshot;
     }
     async assertActive(lab) {
         if (!this.active(lab)) throw new Error('This lab session is not active.');

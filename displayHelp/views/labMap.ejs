@@ -420,7 +420,7 @@
                         <span class="seat-sub"><%= seat.issue %></span>
                     <% } %>
                     <% if (seat.status === 'help' && seat.helpTime) { %>
-                        <span class="seat-sub"><%= seat.helpTime %></span>
+                        <span class="seat-sub">Needs help</span>
                     <% } %>
                 </div>
             <% }); %>
@@ -450,6 +450,7 @@
 
     <footer><span>SurveySync</span><span>Department of Electronics &amp; Communications Engineering</span></footer>
 
+    <script src="/help-alerts.js" defer></script>
     <script src="/live.js" defer></script>
 </body>
 </html>

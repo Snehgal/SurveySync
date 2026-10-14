@@ -26,6 +26,7 @@
     <nav aria-label="Admin sections">
         <button onclick="scrollToSection('containerS')" id="schedule-section-btn">Schedule</button>
         <button onclick="scrollToSection('layout-section')" id="layout-btn">Seat Layout</button>
+        <button onclick="scrollToSection('responses-section')" id="responses-btn">Responses</button>
         <button onclick="scrollToSection('activity-section')" id="activity-btn">Activity</button>
         <button id="help-btn">Help tracking</button>
         <button id="dshbrd">Analytics</button>
@@ -169,6 +170,20 @@
         </div>
     </div>
 
+        <section id="responses-section" class="section response-details" aria-labelledby="responses-heading">
+            <div class="section-heading compact"><h2 id="responses-heading">Response details</h2></div>
+            <div class="response-filters">
+                <div><label for="response-lab">Lab session</label><select id="response-lab" disabled><option value="">Select a lab</option></select></div>
+                <div><label for="response-mode">Response type</label><select id="response-mode" disabled><option value="quiz">Quiz</option><option value="feedback">Feedback</option></select></div>
+                <button type="button" id="response-refresh">Refresh labs</button>
+            </div>
+            <p id="response-error" role="status" hidden></p>
+            <p id="response-session-state"></p>
+            <div class="response-groups">
+                <section class="response-group yes-group"><h3>Yes <span id="response-yes-count">0</span></h3><div id="response-yes-tables">Select a lab session.</div></section>
+                <section class="response-group no-group"><h3>No <span id="response-no-count">0</span></h3><div id="response-no-tables">Select a lab session.</div></section>
+            </div>
+        </section>
         <div id="activity-section" class="section">
             <div id="container">
                 <div id="data-container-wrapper">
@@ -280,6 +295,7 @@
             });
         </script>
         <script src="./script.js"></script>
+        <script src="./responses.js"></script>
 </body>
 
 </html>

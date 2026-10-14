@@ -19,6 +19,7 @@
     const seatAuth = require('../shared/seat-auth');
     const { LabRuntime } = require('../shared/lab-runtime');
     const subscribers = new Map();
+    const responseSubscribers = new Map();
 
     const server = http.createServer(app);
     const wss = new WebSocket.Server({ server }); // Bind WebSocket to HTTP server
@@ -145,8 +146,12 @@
                 await client.connect();
                 db = client.db(process.env.MONGODB_DB || "ResponseLogging");
                 runtime = new LabRuntime(db, { onChange(snapshot) {
+                    const { responseDetails, ...seatSnapshot } = snapshot;
                     for (const res of subscribers.get(snapshot.labID) || []) {
-                        res.write('data: ' + JSON.stringify(snapshot) + '\n\n');
+                        if (!res.destroyed && !res.writableEnded) res.write('data: ' + JSON.stringify(seatSnapshot) + '\n\n');
+                    }
+                    for (const res of responseSubscribers.get(snapshot.labID) || []) {
+                        if (!res.destroyed && !res.writableEnded) res.write('data: ' + JSON.stringify(snapshot) + '\n\n');
                     }
                 } });
                 console.log("Connected to MongoDB");
@@ -260,31 +265,35 @@
 
     // The separate seat-map identity controls modes, issues and quiz totals.
     app.use('/seat-api', seatAuth.requireAuth);
-    app.get('/seat-api/labs/:labID/events', async (req, res) => {
+    async function labStream(req, res, adminView = false) {
         const labID = req.params.labID;
+        const listeners = adminView ? responseSubscribers : subscribers;
         try {
             res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', 'Connection': 'keep-alive', 'X-Accel-Buffering': 'no' });
             res.flushHeaders();
-            if (!subscribers.has(labID)) subscribers.set(labID, new Set());
-            subscribers.get(labID).add(res);
+            if (!listeners.has(labID)) listeners.set(labID, new Set());
+            listeners.get(labID).add(res);
             const heartbeat = setInterval(() => {
-                if (!seatAuth.isAuthenticated(req)) return res.end();
+                if (!(adminView ? isAuthenticated(req) : seatAuth.isAuthenticated(req))) return res.end();
                 res.write(': heartbeat\n\n');
             }, 15000);
             res.on('close', () => {
                 clearInterval(heartbeat);
-                subscribers.get(labID)?.delete(res);
-                if (!subscribers.get(labID)?.size) subscribers.delete(labID);
+                listeners.get(labID)?.delete(res);
+                if (!listeners.get(labID)?.size) listeners.delete(labID);
             });
             await runtime.serial(labID, async () => {
-                const data = await runtime.snapshotUnlocked(await runtime.schedule(labID));
-                res.write('data: ' + JSON.stringify(data) + '\n\n');
+                const data = await runtime.snapshotUnlocked(await runtime.schedule(labID), adminView);
+                if (!res.destroyed && !res.writableEnded) res.write('data: ' + JSON.stringify(data) + '\n\n');
             });
         } catch (error) {
-            res.write('event: failure\ndata: ' + JSON.stringify({ message: error.message }) + '\n\n');
-            res.end();
+            if (!res.destroyed && !res.writableEnded) {
+                res.write('event: failure\ndata: ' + JSON.stringify({ message: error.message }) + '\n\n');
+                res.end();
+            }
         }
-    });
+    }
+    app.get('/seat-api/labs/:labID/events', (req, res) => labStream(req, res));
     function seatRoute(action) {
         return async (req, res) => {
             try { res.json(await action(req)); }
@@ -295,6 +304,9 @@
     app.post('/seat-api/labs/:labID/mode', seatRoute(req => runtime.setMode(req.params.labID, req.body.mode)));
     app.post('/seat-api/labs/:labID/reset', seatRoute(req => runtime.reset(req.params.labID)));
     app.post('/seat-api/labs/:labID/issue', seatRoute(req => runtime.issue(req.params.labID, req.body)));
+    // Per-table votes are available only to the schedule administrator.
+    app.get('/response-api/labs/:labID/events', requireAuth, (req, res) => labStream(req, res, true));
+    app.get('/response-api/labs/:labID/state', requireAuth, seatRoute(req => runtime.snapshot(req.params.labID, true)));
 
     // Get schedule records with optional filter
     app.get('/get-records', requireAuth, async (req, res) => {

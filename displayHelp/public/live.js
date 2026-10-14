@@ -5,6 +5,47 @@
     const byId = id => document.getElementById(id);
     let current = null, clockOffset = 0, selectedTable = null, previousFocus = null, busy = false, online = false;
     const message = text => { byId('live-message').textContent = text; byId('live-message').hidden = !text; };
+    let audio = null;
+    const soundButton = byId('help-sound');
+    const syncSoundButton = () => {
+        soundButton.setAttribute('aria-pressed', String(helpAlerts.enabled));
+        soundButton.textContent = helpAlerts.enabled ? 'Mute sound' : 'Enable sound';
+    };
+    const helpAlerts = new SurveySyncHelpAlerts({ play() {
+        try {
+            if (audio?.state !== 'running') throw new Error('Audio is unavailable.');
+            const oscillator = audio.createOscillator(), gain = audio.createGain();
+            const start = audio.currentTime;
+            oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(660, start);
+            oscillator.frequency.setValueAtTime(880, start + .12);
+            gain.gain.setValueAtTime(0, start); gain.gain.linearRampToValueAtTime(.06, start + .02);
+            gain.gain.linearRampToValueAtTime(0, start + .28);
+            oscillator.connect(gain); gain.connect(audio.destination);
+            oscillator.start(start); oscillator.stop(start + .3);
+            oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
+        } catch {
+            helpAlerts.setEnabled(false); syncSoundButton();
+            message('Sound is unavailable. Use Enable sound to try again.');
+        }
+    } });
+    soundButton.addEventListener('click', async () => {
+        if (helpAlerts.enabled) { helpAlerts.setEnabled(false); syncSoundButton(); return; }
+        soundButton.disabled = true;
+        try {
+            const Audio = window.AudioContext || window.webkitAudioContext;
+            if (!Audio) throw new Error('Audio is unsupported.');
+            if (!audio || audio.state === 'closed') {
+                audio = new Audio();
+                audio.onstatechange = () => {
+                    if (audio.state !== 'running') { helpAlerts.setEnabled(false); syncSoundButton(); }
+                };
+            }
+            await audio.resume();
+            if (audio.state !== 'running') throw new Error('Audio could not start.');
+            helpAlerts.setEnabled(true); syncSoundButton();
+        } catch { message('Unable to enable sound. Check this browser\'s sound permissions.'); }
+        finally { soundButton.disabled = false; }
+    });
     async function request(path, body) {
         const response = await fetch(base + path, body === undefined ? { cache: 'no-store' } : {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
@@ -25,6 +66,12 @@
     function render(data) {
         if (current && data.serverNow < current.serverNow) return;
         current = data;
+        // Audio is optional; it must never interrupt seat or response updates.
+        try { helpAlerts.update(data.helps, data.active); }
+        catch {
+            helpAlerts.setEnabled(false); syncSoundButton();
+            message('Sound was disabled. Seat updates remain active.');
+        }
         clockOffset = data.serverNow - Date.now();
         const feedback = data.mode === 'feedback';
         document.body.classList.toggle('feedback-mode', feedback);
@@ -65,10 +112,11 @@
             seat.dataset.startedAt = help && !issue ? help.startedAt : '';
             seat.tabIndex = status === 'help' && current.active ? 0 : -1;
             if (status === 'help') seat.setAttribute('role', 'button'); else seat.removeAttribute('role');
-            seat.title = `Table ${id}` + (issue ? ` - ${issue.issue}${issue.remarks ? ': ' + issue.remarks : ''} · Frozen for this session` : help ? ' - Needs help' : ' - Idle');
+            seat.title = `Table ${id}` + (issue ? ` - ${issue.issue}${issue.remarks ? ': ' + issue.remarks : ''} · Frozen for this session` : help ? ` - #${help.rank} in help queue` : ' - Idle');
+            seat.dataset.queueRank = help && !issue ? help.rank : '';
             let sub = seat.querySelector('.seat-sub');
             if (!sub) { sub = document.createElement('span'); sub.className = 'seat-sub'; seat.append(sub); }
-            sub.textContent = issue ? issue.issue : help ? 'Needs help' : '';
+            sub.textContent = issue ? issue.issue : help ? `#${help.rank} in queue` : '';
             sub.hidden = !issue && !help;
         });
         const stats = document.querySelectorAll('.stats-bar .stat');
@@ -81,6 +129,8 @@
                 return button;
             }, (button, h) => {
                 button.dataset.startedAt = h.startedAt;
+                button.dataset.queueRank = h.rank;
+                button.textContent = `Table ${h.tableID} · #${h.rank} in queue`;
             }, 'No active help requests.');
             updateList(byId('list-unresolved'), current.unresolved, () => {
                 const item = document.createElement('div'); item.className = 'unresolved-detail';
@@ -117,9 +167,7 @@
             seat.classList.toggle('help-medium', elapsed >= 7 * 60000 && elapsed <= 15 * 60000);
             seat.classList.toggle('help-high', elapsed > 15 * 60000);
             const label = `${Math.floor(elapsed / 60000)}:${String(Math.floor(elapsed / 1000) % 60).padStart(2, '0')}`;
-            const sub = seat.querySelector('.seat-sub');
-            if (sub) sub.textContent = label;
-            else if (seat.classList.contains('chip')) seat.textContent = `Table ${seat.dataset.tableId} · ${label}`;
+            seat.title = `Table ${seat.dataset.tableId} - #${seat.dataset.queueRank} in help queue · Waiting ${label}`;
         });
         if (current.mode === 'feedback') {
             const seconds = Math.max(0, Math.ceil((current.feedbackEndsAt - now) / 1000));
@@ -189,8 +237,9 @@
         catch (error) { message(error.message); }
     });
     const stream = new EventSource(base + '/events');
+    stream.onopen = () => helpAlerts.rebaseline();
     stream.onmessage = event => { render(JSON.parse(event.data)); setConnection(true); };
-    stream.onerror = () => { setConnection(false); refresh(); };
+    stream.onerror = () => { helpAlerts.rebaseline(); setConnection(false); refresh(); };
     stream.addEventListener('failure', event => { setConnection(false); message(JSON.parse(event.data).message); });
     async function refresh() {
         try { render(await request('/state')); setConnection(true); }
